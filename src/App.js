@@ -7,65 +7,90 @@ class App extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      close: null,
+      prices: [],
       counter: 0
     };
     this.handleClick = this.handleClick.bind(this);
     this.showRate = this.showRate.bind(this);
     this.draw = this.draw.bind(this);
+    this.parseData = this.parseData.bind(this);
   }
   handleClick() {
     console.log(this.state.counter);
     this.setState(state => ({ counter: this.state.counter + 1 }));
   }
   showRate(symbol) {
-    console.log(symbol)
-    fetch('https://api.iextrading.com/1.0/stock/' + symbol + '/chart/1d')
+    console.log(symbol);
+    
+    fetch('https://api.iextrading.com/1.0/stock/' + symbol + '/ohlc')
       .then(response => response.json())
       .then(r => {
-        console.log(r);
-        const close = r[r.length - 1].marketClose
-        console.log('%c⧭', 'color: #c7166f', close);
-        this.setState(state => ({ ...state, close }));
+        // console.log('%c%s', 'color: #16a9c7', r.close.price);
+        this.setState(state => ({...state, previousClose: r.close.price}))
       })
+      .then(() => fetch('https://api.iextrading.com/1.0/stock/' + symbol + '/chart/1d')
+        .then(response => response.json())
+        .then(r => this.parseData(r)));
+  }
+  parseData(data) {
+    const close = data[data.length - 1].marketClose;
+    console.log(data);
+    const pricesAll = [];
+    let priceMax = 0, priceMin = 0;
+    for (const minuteData of data) {
+      if (minuteData.marketClose) pricesAll.push(minuteData.marketClose);
+    }
+    console.log('%c⧭', 'color: #1663c7', pricesAll);
+    priceMax = Math.max(...pricesAll, this.state.previousClose);
+    priceMin = Math.min(...pricesAll, this.state.previousClose);
+    this.setState(state => ({...state, previousClose: this.state.previousClose - priceMin}))
+    const coef = 35 /*canvas height */ / (priceMax - priceMin);
+    console.log('%c%s', 'color: #25c716', priceMax, priceMin, coef);
+    const pricesModifiedAll = [];
+    for (const minuteData of data) {
+      if (minuteData.marketClose) pricesModifiedAll.push((minuteData.marketClose - priceMin) * coef);
+    }
+    this.setState(state => ({...state, prices: pricesModifiedAll}))
+    console.log('%c⧭', 'color: #c7166f', pricesModifiedAll);
+    this.draw()
+    
+    // this.setState(state => ({ ...state, close }));
   }
   draw() {
-    var canvas = this.refs.canvas;
-    var context = canvas.getContext('2d');
-
+    const canvas = this.refs.canvas;
+    const context = canvas.getContext('2d');
+    context.clearRect(0, 0, canvas.width, canvas.height);
+    this.setState(state => ({...state, counter: state.counter + 1}))
+    // if (this.state.counter > 1) return 
     context.beginPath();
-    context.moveTo(0, 35 / 2);
-    context.lineTo(100, 35 / 2);
+    context.moveTo(0, this.state.previousClose);
+    context.lineTo(100, this.state.previousClose);
     context.lineWidth = 2;
     context.strokeStyle = '#0000001a';
     context.stroke();
-    context.beginPath();
 
+    
     context.beginPath();
-    context.moveTo(0, 35 / 2);
-    context.lineTo(5, 30);
-    context.lineTo(5, 10);
-    context.lineTo(10, 15);
-    context.lineTo(15, 5);
-    context.lineTo(20, 1);
-    context.lineTo(25, 32);
-    context.lineTo(30, 14);
-    context.lineTo(35, 35 / 2);
+    context.moveTo(0, this.state.previousClose);
+    for (const [index, price] of this.state.prices.entries()) {
+      context.lineTo(index * 100 / 390, 35 - price);
+      console.log('%c⧭', 'color: #2516c7', index * 100 / 390, price);
+    }
+    context.lineTo(this.state.prices.length * 100 / 390, this.state.previousClose);
     // context.closePath();
     context.lineWidth = 2;
-    context.fillStyle = '#8ED6FF';
-    context.fill();
+    // context.fillStyle = '#8ED6FF';
+    // context.fill();
     // context.strokeStyle = 'blue';
     context.stroke();
 
-    context.clip()
+    context.clip();
     context.fillStyle = '#008000b2';
-    context.fillRect(0, 0, 100, 35 / 2);
+    context.fillRect(0, 0, 100, this.state.previousClose);
     context.fillStyle = '#ff0000b2';
-    context.fillRect(0, 35 / 2, 100, 35);
+    context.fillRect(0, this.state.previousClose, 100, 35);
   }
   componentDidMount() {
-    this.draw()
     // const socket = io('https://ws-api.iextrading.com/1.0/stock/chart/1d')
     // socket.on('message', message => {
     //   const close = JSON.parse(message).lastSalePrice
