@@ -7,33 +7,39 @@ class App extends Component {
   constructor(props) {
     super(props);
     this.state = {
+      search: 'TSLA',
       prices: [],
-      counter: 0
+      counter: 0,
+      previousClose: null,
+      symbolsList: [],
+      searchList: []
     };
     this.handleClick = this.handleClick.bind(this);
     this.showRate = this.showRate.bind(this);
     this.draw = this.draw.bind(this);
     this.parseData = this.parseData.bind(this);
+    this.search = this.search.bind(this);
   }
   handleClick() {
     console.log(this.state.counter);
-    this.setState(state => ({ counter: this.state.counter + 1 }));
+    this.setState(state => ({ counter: state.counter + 1 }));
   }
   showRate(symbol) {
     console.log(symbol);
     
-    fetch('https://api.iextrading.com/1.0/stock/' + symbol + '/ohlc')
+    let previousClose
+    fetch('https://api.iextrading.com/1.0/stock/' + symbol + '/previous')
       .then(response => response.json())
       .then(r => {
-        console.log('%c%s', 'color: #c716be', r.close.price);
-        this.setState(state => ({...state, previousClose: r.close.price}))
+        console.log('%c%s', 'color: #c716be', r.close);
+        previousClose = r.close;
       })
       .then(() => fetch('https://api.iextrading.com/1.0/stock/' + symbol + '/chart/1d')
         .then(response => response.json())
-        .then(r => this.parseData(r)));
+        .then(r => this.parseData(r, previousClose))
+      );
   }
-  parseData(data) {
-    const close = data[data.length - 1].marketClose;
+  parseData(data, previousClose) {
     console.log(data);
     const pricesAll = [];
     let priceMax = 0, priceMin = 0;
@@ -41,10 +47,10 @@ class App extends Component {
       if (minuteData.marketClose) pricesAll.push(minuteData.marketClose);
     }
     console.log('%c⧭', 'color: #1663c7', pricesAll);
-    priceMax = Math.max(...pricesAll, this.state.previousClose);
-    priceMin = Math.min(...pricesAll, this.state.previousClose);
+    priceMax = Math.max(...pricesAll, previousClose);
+    priceMin = Math.min(...pricesAll, previousClose);
     const coef = 35 /*canvas height */ / (priceMax - priceMin);
-    this.setState(state => ({...state, previousClose: (state.previousClose - priceMin) * coef}))
+    this.setState(state => ({...state, previousClose: (previousClose - priceMin) * coef}))
     console.log('%c%s', 'color: #c716be', this.state.previousClose);
     console.log('%c%s %s %s', 'color: #25c716', priceMax, priceMin, coef);
     const pricesModifiedAll = [];
@@ -75,7 +81,7 @@ class App extends Component {
     context.moveTo(0, 35 - this.state.previousClose);
     for (const [index, price] of this.state.prices.entries()) {
       context.lineTo(index * 100 / 390, 35 - price);
-      console.log('%c⧭', 'color: #2516c7', index * 100 / 390, price);
+      // console.log('%c⧭', 'color: #2516c7', index * 100 / 390, price);
     }
     context.lineTo(this.state.prices.length * 100 / 390, 35 - this.state.previousClose);
     // context.closePath();
@@ -94,7 +100,23 @@ class App extends Component {
     context.fillRect(0, 35 - this.state.previousClose, 100, 35);
     context.restore();
   }
+  getSymbolsList() {
+    fetch('https://api.iextrading.com/1.0/ref-data/symbols?filter=symbol')
+      .then(response => response.json())
+      .then(r => {
+        this.setState(state => ({...state, symbolsList: r.map(el => el.symbol).slice(0, 10)}));
+        this.setState(state => ({...state, searchList: state.symbolsList}));
+        console.log('%c⧭', 'color: #c7c116', this.state.symbolsList);
+      })
+  }
+  search(event) {
+    console.log('%c⧭', 'color: #c71f16', event);
+    this.setState(state => ({...state, search: event.target.value}));
+    const searchList = this.state.symbolsList.filter(el => el === event.target.value) || []
+    this.setState(state => ({...state, searchList: searchList}));
+  }
   componentDidMount() {
+    this.getSymbolsList()
     // const socket = io('https://ws-api.iextrading.com/1.0/stock/chart/1d')
     // socket.on('message', message => {
     //   const close = JSON.parse(message).lastSalePrice
@@ -113,14 +135,14 @@ class App extends Component {
         <header className="App-header">
           {/* <img src={logo} onClick={this.handleClick} className="App-logo" alt="logo" /> */}
           <canvas ref="canvas" id="myCanvas" width="100" height="35"></canvas>
-          <p>
-            {this.state.close}
-          </p>
-          <input type="text" placeholder="Search"/>
+          <input type="text" placeholder="Search" value={this.state.search} onChange={this.search}/>
           <ul>
+            {this.state.searchList.map(symbol => <li key={symbol}><button onClick={() => this.showRate(symbol)}>{symbol}</button></li>)}
+          </ul>
+          {/* <ul>
             <li><button onClick={() => this.showRate('TSLA')}>TSLA</button></li>
             <li><button onClick={() => this.showRate('SNAP')}>SNAP</button></li>
-          </ul>
+          </ul> */}
         </header>
       </div>
     );
