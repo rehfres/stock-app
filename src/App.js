@@ -60,18 +60,13 @@ class App extends Component {
   draw() {
     const canvas = this.refs.canvas;
     const context = canvas.getContext('2d');
-    context.restore();
-    context.save();
     context.clearRect(0, 0, canvas.width, canvas.height);
     this.setState(state => ({...state, counter: state.counter + 1}))
     // if (this.state.counter > 1) return 
-    setTimeout(() => {
-
-    },2000)
     context.beginPath();
     context.moveTo(0, 35 - this.state.previousClose);
     context.lineTo(100, 35 - this.state.previousClose);
-    context.lineWidth = 2;
+    context.lineWidth = 1;
     context.strokeStyle = '#0000001a';
     context.stroke();
 
@@ -91,11 +86,13 @@ class App extends Component {
     context.stroke();
 
     // context.beginPath();
+    context.save();
     context.clip();
     context.fillStyle = '#008000b2';
     context.fillRect(0, 0, 100, 35 - this.state.previousClose);
     context.fillStyle = '#ff0000b2';
     context.fillRect(0, 35 - this.state.previousClose, 100, 35);
+    context.restore();
   }
   componentDidMount() {
     // const socket = io('https://ws-api.iextrading.com/1.0/stock/chart/1d')
