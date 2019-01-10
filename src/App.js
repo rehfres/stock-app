@@ -26,19 +26,26 @@ class App extends Component {
   }
   showRate(symbol) {
     console.log(symbol);
-    fetch('https://api.iextrading.com/1.0/stock/' + symbol + '/batch?types=quote,chart&range=1d')
-      .then(response => response.json())
-      .then(r => this.parseData(r));
+    Promise.all([
+      fetch('https://api.iextrading.com/1.0/stock/' + symbol + '/chart/1m').then(response => response.json()),
+      fetch('https://api.iextrading.com/1.0/stock/' + symbol + '/chart/1d').then(response => response.json())
+    ]).then(charts => this.parseData(...charts));
   }
-  parseData(data) {
-    console.log(data);
-    const previousClose = data.quote.previousClose;
+  extractPreviousClose(chartDataMonth, chartDataDay) {
+    const dateToday = new Date(Date.now() - 864e5).toISOString().split('T')[0].replace(/-/g,'');
+    const chardDataDayReturnsYesterday = dateToday === chartDataDay[chartDataDay.length - 1].date
+    const objToGetPreviousCloseFrom = chartDataMonth[chartDataMonth.length - (chardDataDayReturnsYesterday ? 2 : 1)];
+    const previousClose = objToGetPreviousCloseFrom.close;
+    return previousClose;
+  }
+  parseData(chartDataMonth, chartDataDay) {
+    console.log(chartDataMonth, chartDataDay);
+    const previousClose = this.extractPreviousClose(chartDataMonth, chartDataDay);
     console.log('%c⧭', 'color: #16c72e', previousClose);
-    const chartData = data.chart;
     const pricesAll = [];
     let priceMax = 0, priceMin = 0;
-    for (const minuteData of chartData) {
-      if (minuteData.marketClose) pricesAll.push(minuteData.marketClose);
+    for (const minuteData of chartDataDay) {
+      if (minuteData.marketClose || minuteData.close) pricesAll.push(minuteData.marketClose || minuteData.close);
     }
     console.log('%c⧭', 'color: #1663c7', pricesAll);
     priceMax = Math.max(...pricesAll, previousClose);
@@ -48,14 +55,12 @@ class App extends Component {
     console.log('%c%s', 'color: #c716be', this.state.previousClose);
     console.log('%c%s %s %s', 'color: #25c716', priceMax, priceMin, coef);
     const pricesModifiedAll = [];
-    for (const minuteData of chartData) {
-      if (minuteData.marketClose) pricesModifiedAll.push((minuteData.marketClose - priceMin) * coef);
+    for (const minuteData of chartDataDay) {
+      if (minuteData.marketClose || minuteData.close) pricesModifiedAll.push(((minuteData.marketClose || minuteData.close) - priceMin) * coef);
     }
     this.setState(state => ({...state, prices: pricesModifiedAll}))
     console.log('%c⧭', 'color: #c71616', pricesModifiedAll);
     this.draw()
-    
-    // this.setState(state => ({ ...state, close }));
   }
   draw() {
     const canvas = this.refs.canvas;
@@ -88,9 +93,9 @@ class App extends Component {
     // context.beginPath();
     context.save();
     context.clip();
-    context.fillStyle = '#008000b2';
+    context.fillStyle = '#ccebd6';
     context.fillRect(0, 0, 100, 35 - this.state.previousClose);
-    context.fillStyle = '#ff0000b2';
+    context.fillStyle = '#ffd6d8';
     context.fillRect(0, 35 - this.state.previousClose, 100, 35);
     context.restore();
   }
