@@ -26,24 +26,18 @@ class App extends Component {
   }
   showRate(symbol) {
     console.log(symbol);
-    
-    let previousClose
-    fetch('https://api.iextrading.com/1.0/stock/' + symbol + '/previous')
+    fetch('https://api.iextrading.com/1.0/stock/' + symbol + '/batch?types=quote,chart&range=1d')
       .then(response => response.json())
-      .then(r => {
-        console.log('%c%s', 'color: #c716be', r.close);
-        previousClose = r.close;
-      })
-      .then(() => fetch('https://api.iextrading.com/1.0/stock/' + symbol + '/chart/1d')
-        .then(response => response.json())
-        .then(r => this.parseData(r, previousClose))
-      );
+      .then(r => this.parseData(r));
   }
-  parseData(data, previousClose) {
+  parseData(data) {
     console.log(data);
+    const previousClose = data.quote.previousClose;
+    console.log('%c⧭', 'color: #16c72e', previousClose);
+    const chartData = data.chart;
     const pricesAll = [];
     let priceMax = 0, priceMin = 0;
-    for (const minuteData of data) {
+    for (const minuteData of chartData) {
       if (minuteData.marketClose) pricesAll.push(minuteData.marketClose);
     }
     console.log('%c⧭', 'color: #1663c7', pricesAll);
@@ -54,7 +48,7 @@ class App extends Component {
     console.log('%c%s', 'color: #c716be', this.state.previousClose);
     console.log('%c%s %s %s', 'color: #25c716', priceMax, priceMin, coef);
     const pricesModifiedAll = [];
-    for (const minuteData of data) {
+    for (const minuteData of chartData) {
       if (minuteData.marketClose) pricesModifiedAll.push((minuteData.marketClose - priceMin) * coef);
     }
     this.setState(state => ({...state, prices: pricesModifiedAll}))
@@ -72,7 +66,7 @@ class App extends Component {
     context.beginPath();
     context.moveTo(0, 35 - this.state.previousClose);
     context.lineTo(100, 35 - this.state.previousClose);
-    context.lineWidth = 1;
+    context.lineWidth = 2;
     context.strokeStyle = '#0000001a';
     context.stroke();
 
@@ -101,22 +95,23 @@ class App extends Component {
     context.restore();
   }
   getSymbolsList() {
-    fetch('https://api.iextrading.com/1.0/ref-data/symbols?filter=symbol')
+    return fetch('https://api.iextrading.com/1.0/ref-data/symbols?filter=symbol')
       .then(response => response.json())
       .then(r => {
-        this.setState(state => ({...state, symbolsList: r.map(el => el.symbol).slice(0, 10)}));
+        this.setState(state => ({...state, symbolsList: r.map(el => el.symbol)}));
         this.setState(state => ({...state, searchList: state.symbolsList}));
         console.log('%c⧭', 'color: #c7c116', this.state.symbolsList);
       })
   }
   search(event) {
-    console.log('%c⧭', 'color: #c71f16', event);
-    this.setState(state => ({...state, search: event.target.value}));
-    const searchList = this.state.symbolsList.filter(el => el === event.target.value) || []
+    const search = event.target ? event.target.value : event
+    console.log('%c⧭', 'color: #c7166f', search);
+    this.setState(state => ({...state, search}));
+    const searchList = this.state.symbolsList.filter(el => el.startsWith(search.toUpperCase())) || []
     this.setState(state => ({...state, searchList: searchList}));
   }
   componentDidMount() {
-    this.getSymbolsList()
+    this.getSymbolsList().then(() => this.search(this.state.search))
     // const socket = io('https://ws-api.iextrading.com/1.0/stock/chart/1d')
     // socket.on('message', message => {
     //   const close = JSON.parse(message).lastSalePrice
@@ -137,7 +132,7 @@ class App extends Component {
           <canvas ref="canvas" id="myCanvas" width="100" height="35"></canvas>
           <input type="text" placeholder="Search" value={this.state.search} onChange={this.search}/>
           <ul>
-            {this.state.searchList.map(symbol => <li key={symbol}><button onClick={() => this.showRate(symbol)}>{symbol}</button></li>)}
+            {this.state.searchList.map(symbol => <li key={symbol}><button onClick={() => this.showRate(symbol)}>{symbol}</button></li>).slice(0, 10)}
           </ul>
           {/* <ul>
             <li><button onClick={() => this.showRate('TSLA')}>TSLA</button></li>
