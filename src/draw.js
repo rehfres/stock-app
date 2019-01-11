@@ -1,14 +1,14 @@
 
-export function drawPreviousCloseLine(previousClose) {
+export function drawPreviousCloseLine(context, previousClose) {
   context.beginPath();
   context.moveTo(0, 35 - previousClose);
   context.lineTo(100, 35 - previousClose);
-  context.lineWidth = 2;
+  context.lineWidth = 4;
   context.strokeStyle = '#0000001a';
   context.stroke();
 }
 
-export function drawChart(prices, previousClose) {
+export function drawChart(context, prices, previousClose) {
   context.beginPath();
   context.moveTo(0, 35 - previousClose);
   for (const [index, price] of prices.entries()) {
@@ -24,7 +24,7 @@ export function drawChart(prices, previousClose) {
   context.stroke();
 }
 
-export function fillChart(previousClose) {
+export function fillChart(context, previousClose) {
   context.save();
   context.clip();
   context.fillStyle = '#ccebd6';

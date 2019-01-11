@@ -1,31 +1,36 @@
 import React, { Component } from 'react';
 // import logo from './logo.svg';
 import './Stock.css';
-import { drawPreviousCloseLine, drawChart, fillChart } from 'socket.io-client';
+import { drawPreviousCloseLine, drawChart, fillChart } from './draw.js';
+import Big from 'big.js';
 
 class Stock extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      symbol: 'TSLA',
       prices: [],
+      pricesModifiedForCanvas: [],
       counter: 0,
       previousClose: null,
+      previousCloseModifiedForCanvas: null,
       priceMin: null,
       priceMax: null,
       coefPricesToCanvas: null
     };
-    this.getChart = this.getChart.bind(this);
+    this.getDataAndMakeChart = this.getDataAndMakeChart.bind(this);
+    this.makeChart = this.makeChart.bind(this);
     this.draw = this.draw.bind(this);
-    this.parseData = this.parseData.bind(this);
-    this.search = this.search.bind(this);
+    this.setPreviousClose = this.setPreviousClose.bind(this);
+    this.modifyEverythingForCanvas = this.modifyEverythingForCanvas.bind(this);
+    this.getPricesMaxMinAndCanvasCoef = this.getPricesMaxMinAndCanvasCoef.bind(this);
   }
   async getDataAndMakeChart() {
-    const chartData = await fetch('https://api.iextrading.com/1.0/stock/' + symbol + '/chart/1d')
-      .then(response => response.json())
+    const chartData = await fetch('https://api.iextrading.com/1.0/stock/' + this.props.symbol + '/chart/1d')
+      .then(response => response.json());
     this.makeChart(chartData);
+    console.log('%c⧭', 'color: #c74b16', chartData);
   }
-  updateChart() {
+  // updateChart() {
     // fetch('https://api.iextrading.com/1.0/stock/' + symbol + '/chart/1d')
     // fetch('https://api.iextrading.com/1.0/stock/' + symbol + '/chart/1m').then(response => response.json())
 
@@ -33,61 +38,75 @@ class Stock extends Component {
     //   .then(chartData => {
     //     this.makeChart(chartData)
     //   })
-  }
-  makeChart(chartDataDay) {
-    this.getPricesMaxMinAndCanvasCoef(chartDataDay)
-    this.setPreviousClose(chartDataDay);
-    this.setPrices(chartDataDay);
+  // }
+  async makeChart(chartDataDay) {
+    await this.setPreviousClose(chartDataDay);
+    this.getPricesMaxMinAndCanvasCoef(chartDataDay);
+    this.modifyEverythingForCanvas();
     this.draw();
   }
   async setPreviousClose(chartDataDay) {
     // if (!this.state.priceMin || !this.state.coef) return
-    chartDataMonth = await fetch('https://api.iextrading.com/1.0/stock/' + symbol + '/chart/1m')
-      .then(response => response.json())
+    const chartDataMonth = await fetch('https://api.iextrading.com/1.0/stock/' + this.props.symbol + '/chart/1m')
+      .then(response => response.json());
     const dateToday = new Date(Date.now() - 864e5).toISOString().split('T')[0].replace(/-/g,'');
-    const chardDataDayReturnsYesterday = dateToday === chartDataDay[chartDataDay.length - 1].date
+    const chardDataDayReturnsYesterday = dateToday === chartDataDay[chartDataDay.length - 1].date;
     const objToGetPreviousCloseFrom = chartDataMonth[chartDataMonth.length - (chardDataDayReturnsYesterday ? 2 : 1)];
     const previousClose = objToGetPreviousCloseFrom.close;
-    this.setState(state => ({...state, previousClose: (previousClose - this.state.priceMin) * this.state.coef}))
-    return previousClose;
+    console.log('%c⧭', 'color: #c79816', `${this.props.symbol}, pC:${previousClose}`);
+    this.setState(state => ({...state, previousClose}));
   }
   getPricesMaxMinAndCanvasCoef(chartDataDay) {
-    const pricesAll = [];
+    const prices = [];
     let priceMax = 0, priceMin = 0;
     for (const minuteData of chartDataDay) {
-      if (minuteData.marketClose || minuteData.close) pricesAll.push(minuteData.marketClose || minuteData.close);
+      if (minuteData.marketClose || minuteData.close) prices.push(minuteData.marketClose || minuteData.close);
     }
-    priceMax = Math.max(...pricesAll, previousClose);
-    priceMin = Math.min(...pricesAll, previousClose);
+    this.setState(state => ({...state, prices}));
+    priceMax = Math.max(...prices, this.state.previousClose);
+    priceMin = Math.min(...prices, this.state.previousClose);
     this.setState(state => ({...state, priceMax}));
     this.setState(state => ({...state, priceMin}));
     const coefPricesToCanvas = 35 /*canvas height */ / (priceMax - priceMin);
-    this.setState(state => ({...state, coefPricesToCanvas}))
+    this.setState(state => ({...state, coefPricesToCanvas}));
   }
-  setPrices(chartDataDay) {
-    const pricesModifiedAll = [];
-    for (const minuteData of chartDataDay) {
-      if (minuteData.marketClose || minuteData.close) pricesModifiedAll.push(((minuteData.marketClose || minuteData.close) - this.state.priceMin) * this.state.coef);
+  modifyEverythingForCanvas() {
+    const pricesModifiedForCanvas = [];
+    for (const price of this.state.prices) {
+      pricesModifiedForCanvas.push((price - this.state.priceMin) * this.state.coefPricesToCanvas);
     }
-    this.setState(state => ({...state, prices: pricesModifiedAll}))
+    this.setState(state => ({...state, pricesModifiedForCanvas: pricesModifiedForCanvas}));
+    this.setState(state => ({...state, previousCloseModifiedForCanvas: (state.previousClose - this.state.priceMin) * this.state.coefPricesToCanvas}));
   }
   draw() {
     const canvas = this.refs.canvas;
     const context = canvas.getContext('2d');
     context.clearRect(0, 0, canvas.width, canvas.height);
-    this.drawPreviousCloseLine(this.state.previousClose)
-    this.drawChart(this.state.prices, this.state.previousClose)
-    this.fillChart(this.state.previousClose)
+    drawPreviousCloseLine(context, this.state.previousCloseModifiedForCanvas);
+    drawChart(context, this.state.pricesModifiedForCanvas, this.state.previousCloseModifiedForCanvas);
+    fillChart(context, this.state.previousCloseModifiedForCanvas);
   }
   componentDidMount() {
+    Big.DP = 2;
+    this.getDataAndMakeChart();
   }
   render() {
+    if (!this.state.prices.length) return null;
+    const lastPrice = this.state.prices[this.state.prices.length - 1];
+    const absoluteChange = Big(lastPrice).minus(this.state.previousClose).toString();
+    const percentageChange = Big(lastPrice).times(100).div(this.state.previousClose).minus(100).toString();
+    console.log('%c⧭', 'color: #c71f16', lastPrice.toString(), this.state.previousClose);
     return (
-      <div className="App">
-        <canvas ref="canvas" id="myCanvas" width="100" height="35"></canvas>
+      <div className="chart">
+        <div className="text">
+          <p className="symbol">{this.props.symbol}</p>
+          <p className="price">{this.state.prices[this.state.prices.length - 1]}</p>
+          <p className={'change ' + (Big(absoluteChange).gte(0) ? 'positive' : 'negative')}>{absoluteChange} ({percentageChange}%)</p>
+        </div>
+        <canvas ref="canvas" width="100" height="35"></canvas>
       </div>
     );
   }
 }
 
-export default App;
+export default Stock;
