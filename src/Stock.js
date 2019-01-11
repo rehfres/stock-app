@@ -1,7 +1,8 @@
 import React, { Component } from 'react';
 // import logo from './logo.svg';
 import './Stock.css';
-import { drawPreviousCloseLine, drawChart, fillChart } from './draw.js';
+import { drawPreviousCloseLine, drawChart } from './draw.js';
+import timeToMinutes from './timeToMinutes.js';
 import Big from 'big.js';
 
 class Stock extends Component {
@@ -30,15 +31,11 @@ class Stock extends Component {
     this.makeChart(chartData);
     console.log('%c⧭', 'color: #c74b16', chartData);
   }
-  // updateChart() {
-    // fetch('https://api.iextrading.com/1.0/stock/' + symbol + '/chart/1d')
-    // fetch('https://api.iextrading.com/1.0/stock/' + symbol + '/chart/1m').then(response => response.json())
-
-    //   .then(response => response.json()
-    //   .then(chartData => {
-    //     this.makeChart(chartData)
-    //   })
-  // }
+  async updateChart() {
+    const newChartData = await fetch('https://api.iextrading.com/1.0/stock/' + this.props.symbol + '/chart/1d?chartLast=5')
+      .then(response => response.json());
+    
+  }
   async makeChart(chartDataDay) {
     await this.setPreviousClose(chartDataDay);
     this.getPricesMaxMinAndCanvasCoef(chartDataDay);
@@ -46,7 +43,6 @@ class Stock extends Component {
     this.draw();
   }
   async setPreviousClose(chartDataDay) {
-    // if (!this.state.priceMin || !this.state.coef) return
     const chartDataMonth = await fetch('https://api.iextrading.com/1.0/stock/' + this.props.symbol + '/chart/1m')
       .then(response => response.json());
     const dateToday = new Date(Date.now() - 864e5).toISOString().split('T')[0].replace(/-/g,'');
@@ -59,8 +55,13 @@ class Stock extends Component {
   getPricesMaxMinAndCanvasCoef(chartDataDay) {
     const prices = [];
     let priceMax = 0, priceMin = 0;
+    const lastLocalPriceTimeInMinutes = this.state.prices.legth ? this.state.prices[this.state.prices.length - 1].timeInMinutes : 0
     for (const minuteData of chartDataDay) {
-      if (minuteData.marketClose || minuteData.close) prices.push(minuteData.marketClose || minuteData.close);
+      if (timeToMinutes(minuteData.minute) > lastLocalPriceTimeInMinutes && (minuteData.marketClose || minuteData.close)) prices.push({
+        price: minuteData.marketClose || minuteData.close,
+        timeInMinutes: timeToMinutes(minuteData.minute)
+      });
+      console.log('%c⧭', 'color: #c71f16', timeToMinutes(minuteData.minute), lastLocalPriceTimeInMinutes);
     }
     this.setState(state => ({...state, prices}));
     priceMax = Math.max(...prices, this.state.previousClose);
@@ -71,9 +72,17 @@ class Stock extends Component {
     this.setState(state => ({...state, coefPricesToCanvas}));
   }
   modifyEverythingForCanvas() {
-    const pricesModifiedForCanvas = [];
-    for (const price of this.state.prices) {
-      pricesModifiedForCanvas.push((price - this.state.priceMin) * this.state.coefPricesToCanvas);
+    const pricesModifiedForCanvas = {
+      positive: [],
+      negative: []
+    };
+    // this.setState(state => ({...state, previousClose: state.priceMin + (state.priceMax - state.priceMin) / 2}));
+    for (const [index, price] of this.state.prices.entries()) {
+      const sign = price >= this.state.previousClose ? 'positive' : 'negative';
+      pricesModifiedForCanvas[sign].push({
+        price: (price - this.state.priceMin) * this.state.coefPricesToCanvas,
+        index
+      });
     }
     this.setState(state => ({...state, pricesModifiedForCanvas: pricesModifiedForCanvas}));
     this.setState(state => ({...state, previousCloseModifiedForCanvas: (state.previousClose - this.state.priceMin) * this.state.coefPricesToCanvas}));
@@ -84,7 +93,7 @@ class Stock extends Component {
     context.clearRect(0, 0, canvas.width, canvas.height);
     drawPreviousCloseLine(context, this.state.previousCloseModifiedForCanvas);
     drawChart(context, this.state.pricesModifiedForCanvas, this.state.previousCloseModifiedForCanvas);
-    fillChart(context, this.state.previousCloseModifiedForCanvas);
+    // fillChart(context, this.state.previousCloseModifiedForCanvas);
   }
   componentDidMount() {
     Big.DP = 2;
@@ -101,7 +110,7 @@ class Stock extends Component {
         <div className="text">
           <p className="symbol">{this.props.symbol}</p>
           <p className="price">{this.state.prices[this.state.prices.length - 1]}</p>
-          <p className={'change ' + (Big(absoluteChange).gte(0) ? 'positive' : 'negative')}>{absoluteChange} ({percentageChange}%)</p>
+          <p className={'change ' + (absoluteChange >= 0 ? 'positive' : 'negative')}>{absoluteChange} ({percentageChange}%)</p>
         </div>
         <canvas ref="canvas" width="100" height="35"></canvas>
       </div>
