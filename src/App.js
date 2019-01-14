@@ -2,7 +2,6 @@ import React, { Component } from 'react';
 // import logo from './logo.svg';
 import Stock from './Stock';
 import './App.css';
-import { socket, addToSymbolsActiveData } from './Socket'
 
 class App extends Component {
   constructor(props) {
@@ -36,29 +35,10 @@ class App extends Component {
   tryToAddSymbolChart(symbol) {
     if (!this.state.symbolsListActive.some(el => el === symbol)) {
       this.setState(state => ({...state, symbolsListActive: state.symbolsListActive.concat([symbol])}));
-      socket.emit('subscribe', symbol)
-      addToSymbolsActiveData();
     }
   }
   componentDidMount() {
     this.getSymbolsList().then(() => this.search(this.state.search));
-    // const socket = io('https://ws-api.iextrading.com/1.0/tops')
-
-    // // Listen to the channel's messages
-    // socket.on('message', message => console.log(message))
-
-    // // Connect to the channel
-    // socket.on('connect', () => {
-
-    //   // Subscribe to topics (i.e. appl,fb,aig+)
-    //   socket.emit('subscribe', 'snap,fb,aig+')
-
-    //   // Unsubscribe from topics (i.e. aig+)
-    //   // socket.emit('unsubscribe', 'aig+')
-    // })
-
-    // // Disconnect from the channel
-    // socket.on('disconnect', () => console.log('Disconnected.'))
   }
   render() {
     return (

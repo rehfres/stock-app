@@ -13,7 +13,7 @@ export function drawPreviousCloseLine(context, previousClose) {
 
 export function drawChart(context, prices, previousClose) {
   // previousClose = canvasHeight / 2;
-  console.log('%c⧭', 'color: #a66037', prices);
+  // console.log('%c⧭', 'color: #a66037', prices);
   console.time(1)
   for (const sign of ['positive', 'negative']) {
     let lastData = {

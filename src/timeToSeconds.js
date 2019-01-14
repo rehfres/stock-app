@@ -1,9 +1,15 @@
 export default function timeToSeconds(time) {
   time = time.toString();
-  // console.log('%c⧭', 'color: #6c16c7', time);
-  if (time.includes(':')) {
-    return +time.split(':')[0] * 3600 + +time.split(':')[1] * 60
-  } else {
-    return +(time.slice(-3) + '000')
+  if (typeof time !== 'string' || !time.includes(':')) {
+    console.log('%c⧭', 'color: #c71f16', time);
+    time = time - 5 * 3600 * 1000; // utc to est
+    time = new Date(+time).toISOString().split('T')[1].slice(0, -1);
   }
+  let coef = 3600
+  let result = null
+  for (const number of time.split('.')[0].split(':')) {
+    result += number * coef;
+    coef = coef / 60;
+  }
+  return result;
 }

@@ -4,6 +4,7 @@ import './Stock.css';
 import { drawPreviousCloseLine, drawChart } from './draw.js';
 import timeToSeconds from './timeToSeconds.js';
 import Big from 'big.js';
+import { socket, startGettingSymbolData } from './Socket';
 
 class Stock extends Component {
   constructor(props) {
@@ -28,19 +29,19 @@ class Stock extends Component {
   async getDataAndMakeChart() {
     const chartData = await fetch('https://api.iextrading.com/1.0/stock/' + this.props.symbol + '/chart/1d')
       .then(response => response.json());
-    this.makeChart(chartData);
-    console.log('%c⧭', 'color: #c74b16', chartData);
+    return this.makeChart(chartData);
+    // console.log('%c⧭', 'color: #c74b16', chartData);
   }
-  async updateChart() {
-    const newChartData = await fetch('https://api.iextrading.com/1.0/stock/' + this.props.symbol + '/chart/1d?chartLast=5')
-      .then(response => response.json());
+  // async updateChart() {
+  //   const newChartData = await fetch('https://api.iextrading.com/1.0/stock/' + this.props.symbol + '/chart/1d?chartLast=5')
+  //     .then(response => response.json());
     
-  }
+  // }
   async makeChart(chartDataDay) {
     await this.setPreviousClose(chartDataDay);
     this.getPricesMaxMinAndCanvasCoef(chartDataDay);
     this.modifyEverythingForCanvas();
-    this.draw();
+    return this.draw();
   }
   async setPreviousClose(chartDataDay) {
     const chartDataMonth = await fetch('https://api.iextrading.com/1.0/stock/' + this.props.symbol + '/chart/1m')
@@ -61,26 +62,26 @@ class Stock extends Component {
       if (timeToSeconds(minuteData.minute) > lastLocalPriceTimeInSeconds) {
         prices.push({
           price,
-          timeInSeconds: timeToSeconds(minuteData.minute) - (9 * 60 * 60 + 30 * 60)
+          timeInSeconds: timeToSeconds(minuteData.minute)
         });
         simplePrices.push(price);
       }
       lastPrice = price;
       // console.log('%c⧭', 'color: #c71f16', timeToSeconds(minuteData.minute), lastLocalPricetimeInSeconds);
     }
-    // console.log('%c⧭', 'color: #2516c7', prices, simplePrices);
+    console.log('%c⧭', 'color: #2516c7', prices);
     this.setState(state => ({...state, prices}));
     const priceMax = Math.max(...simplePrices, this.state.previousClose);
     const priceMin = Math.min(...simplePrices, this.state.previousClose);
     this.setState(state => ({...state, priceMax}));
     this.setState(state => ({...state, priceMin}));
-    console.log('%c⧭', 'color: #c7c116', ...simplePrices, this.state.previousClose);
+    // console.log('%c⧭', 'color: #c7c116', ...simplePrices, this.state.previousClose);
     const coefPricesToCanvas = 35 /*canvas height */ / (priceMax - priceMin);
     this.setState(state => ({...state, coefPricesToCanvas}));
   }
   modifyEverythingForCanvas() {
     this.setState(state => ({...state, previousCloseModifiedForCanvas: (state.previousClose - this.state.priceMin) * this.state.coefPricesToCanvas}));
-    console.log('%c⧭', 'color: #b8ca10', this.state.previousCloseModifiedForCanvas);
+    // console.log('%c⧭', 'color: #b8ca10', this.state.previousCloseModifiedForCanvas);
     const pricesModifiedForCanvas = {
       positive: [],
       negative: []
@@ -89,11 +90,11 @@ class Stock extends Component {
       sign: null,
       time: null
     }
-    let index = 0
+    let index = 0;
     // this.setState(state => ({...state, previousClose: state.priceMin + (state.priceMax - state.priceMin) / 2}));
     for (const priceObj of this.state.prices) {
-      const price = priceObj.price
-      const timeInSeconds = priceObj.timeInSeconds
+      const price = priceObj.price;
+      const timeInSeconds = priceObj.timeInSeconds - (9 * 60 * 60 + 30 * 60);
       const sign = price >= this.state.previousClose ? 'positive' : 'negative';
       if (lastData.sign !== sign && lastData.sign !== null) {
         for (const temp of [lastData.sign, sign]) {
@@ -102,7 +103,7 @@ class Stock extends Component {
             price: this.state.previousCloseModifiedForCanvas,
             index
           });
-          console.log('%c⧭', 'color: #c74b16', timeInSeconds, lastData.time, index);          
+          // console.log('%c⧭', 'color: #c74b16', timeInSeconds, lastData.time, index);          
           index++;
         }
       }
@@ -116,6 +117,7 @@ class Stock extends Component {
       index++;
     }
     this.setState(state => ({...state, pricesModifiedForCanvas: pricesModifiedForCanvas}));
+    console.log('%c', 'color: #86c716', this.state.pricesModifiedForCanvas);
   }
   draw() {
     const canvas = this.refs.canvas;
@@ -125,17 +127,35 @@ class Stock extends Component {
     drawChart(context, this.state.pricesModifiedForCanvas, this.state.previousCloseModifiedForCanvas);
     // fillChart(context, this.state.previousCloseModifiedForCanvas);
   }
+  onSocketMessage() {
+    socket.on('message', message => {
+      message = JSON.parse(message);
+      console.log(message);
+      this.mergeSocketDataToPrices(message);
+      // symbolsActiveData[symbol] = {
+      //   price: message.price,
+      //   time: timeToSeconds(message.time)
+      // };
+    })
+  }
+  mergeSocketDataToPrices(message) {
+    const lastLocalPriceTime = this.state.prices[this.state.prices.length - 1];
+    console.log('%c⧭', 'color: #16c79e', lastLocalPriceTime, timeToSeconds(message.time));
+  }
   componentDidMount() {
     Big.DP = 2;
-    this.getDataAndMakeChart();
+    this.getDataAndMakeChart().then(() => {
+      startGettingSymbolData(this.props.symbol);
+      this.onSocketMessage();
+    })
   }
   render() {
     if (!this.state.prices.length) return null;
     const lastPrice = this.state.prices[this.state.prices.length - 1].price;
-    console.log('%c⧭', 'color: #c7166f', lastPrice);
+    // console.log('%c⧭', 'color: #c7166f', lastPrice);
     const absoluteChange = Big(lastPrice).minus(this.state.previousClose).toString();
     const percentageChange = Big(lastPrice).times(100).div(this.state.previousClose).minus(100).toString();
-    console.log('%c⧭', 'color: #c71f16', lastPrice.toString(), this.state.previousClose);
+    // console.log('%c⧭', 'color: #c71f16', lastPrice.toString(), this.state.previousClose);
     return (
       <div className="chart">
         <div className="text">
