@@ -2,7 +2,8 @@ import React, { Component } from 'react';
 // import logo from './logo.svg';
 import Stock from './Stock';
 import './App.css';
-// import io from 'socket.io-client';
+import io from 'socket.io-client';
+const socket = io('https://ws-api.iextrading.com/1.0/stock/chart/1d');
 
 class App extends Component {
   constructor(props) {
@@ -10,6 +11,7 @@ class App extends Component {
     this.state = {
       search: 'TSLA',
       symbolsListActive: [],
+      symbolsActiveData: {},
       symbolsList: [],
       searchList: []
     };
@@ -34,28 +36,35 @@ class App extends Component {
     this.setState(state => ({...state, searchList: searchList}));
   }
   tryToAddSymbolChart(symbol) {
-    if (!this.state.symbolsListActive.some(el => el === symbol)) this.setState(state => ({...state, symbolsListActive: state.symbolsListActive.concat([symbol])}));
+    if (!this.state.symbolsListActive.some(el => el === symbol)) {
+      this.setState(state => ({...state, symbolsListActive: state.symbolsListActive.concat([symbol])}));
+      socket.emit('subscribe', symbol)
+      this.setState(state => ({...state, symbolsActiveData: {
+        ...state.symbolsActiveData,
+        [symbol]: {}
+      }}));
+    }
   }
   componentDidMount() {
     this.getSymbolsList().then(() => this.search(this.state.search));
-    // const socket = io('https://ws-api.iextrading.com/1.0/stock/chart/1d')
-    // socket.on('message', message => {
-    //   const close = JSON.parse(message).lastSalePrice
-    //   console.log(JSON.parse(message))
-    //   this.setState(state => ({ ...state, close }));
-    // })
-    // socket.on('connect', () => {
-    //   socket.emit('subscribe', 'tsla')
-    //   // socket.emit('unsubscribe', 'aig+')
-    // })
-    // socket.on('disconnect', () => console.log('Disconnected.'))
+    console.log('%c⧭', 'color: #16a9c7', socket);
+    socket.on('message', message => {
+      // const close = JSON.parse(message).lastSalePrice
+      console.log(JSON.parse(message))
+      // this.setState(state => ({ ...state, close }));
+    })
+    socket.on('connect', () => {
+      socket.emit('subscribe', 'aapl,snap,tsla')
+      // socket.emit('unsubscribe', 'aig+')
+    })
+    socket.on('disconnect', () => console.log('Disconnected.'))
   }
   render() {
     return (
       <div className="App">
         <header className="App-header">
           {/* <img src={logo} onClick={this.handleClick} className="App-logo" alt="logo" /> */}
-          {this.state.symbolsListActive.map(symbol => <Stock key={symbol} symbol={symbol}/>)}
+          {this.state.symbolsListActive.map(symbol => <Stock key={symbol} symbol={symbol} lastData={this.state.symbolsActiveData[symbol]}/>)}
           <input type="text" placeholder="Search" value={this.state.search} onChange={this.search}/>
           <ul>
             {this.state.searchList.map(symbol => <li key={symbol}><button onClick={() => this.tryToAddSymbolChart(symbol)}>{symbol}</button></li>).slice(0, 10)}
