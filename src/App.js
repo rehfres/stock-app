@@ -2,8 +2,7 @@ import React, { Component } from 'react';
 // import logo from './logo.svg';
 import Stock from './Stock';
 import './App.css';
-import io from 'socket.io-client';
-const socket = io('https://ws-api.iextrading.com/1.0/last');
+import { socket, addToSymbolsActiveData } from './Socket'
 
 class App extends Component {
   constructor(props) {
@@ -11,7 +10,6 @@ class App extends Component {
     this.state = {
       search: 'SNAP',
       symbolsListActive: [],
-      symbolsActiveData: {},
       symbolsList: [],
       searchList: []
     };
@@ -39,10 +37,7 @@ class App extends Component {
     if (!this.state.symbolsListActive.some(el => el === symbol)) {
       this.setState(state => ({...state, symbolsListActive: state.symbolsListActive.concat([symbol])}));
       socket.emit('subscribe', symbol)
-      this.setState(state => ({...state, symbolsActiveData: {
-        ...state.symbolsActiveData,
-        [symbol]: {}
-      }}));
+      addToSymbolsActiveData();
     }
   }
   componentDidMount() {
@@ -64,26 +59,13 @@ class App extends Component {
 
     // // Disconnect from the channel
     // socket.on('disconnect', () => console.log('Disconnected.'))
-
-    console.log('%c⧭', 'color: #16a9c7', socket);
-    socket.on('message', message => {
-      // const close = JSON.parse(message).lastSalePrice
-      console.log(JSON.parse(message))
-      // this.setState(state => ({ ...state, close }));
-    })
-    socket.on('connect', () => {
-      console.log('%c%s', 'color: #c76f16', 'connect');
-      // socket.emit('subscribe', 'tsla')
-      // socket.emit('unsubscribe', 'aig+')
-    })
-    socket.on('disconnect', () => console.log('Disconnected.'))
   }
   render() {
     return (
       <div className="App">
         <header className="App-header">
           {/* <img src={logo} onClick={this.handleClick} className="App-logo" alt="logo" /> */}
-          {this.state.symbolsListActive.map(symbol => <Stock key={symbol} symbol={symbol} lastData={this.state.symbolsActiveData[symbol]}/>)}
+          {this.state.symbolsListActive.map(symbol => <Stock key={symbol} symbol={symbol}/>)}
           <input type="text" placeholder="Search" value={this.state.search} onChange={this.search}/>
           <ul>
             {this.state.searchList.map(symbol => <li key={symbol}><button onClick={() => this.tryToAddSymbolChart(symbol)}>{symbol}</button></li>).slice(0, 10)}
