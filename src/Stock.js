@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 // import logo from './logo.svg';
 import './Stock.css';
 import { drawPreviousCloseLine, drawChart } from './draw.js';
-import timeToMinutes from './timeToMinutes.js';
+import timeToSeconds from './timeToSeconds.js';
 import Big from 'big.js';
 
 class Stock extends Component {
@@ -54,22 +54,24 @@ class Stock extends Component {
   }
   getPricesMaxMinAndCanvasCoef(chartDataDay) {
     const prices = [], simplePrices = [];
-    let priceMax = 0, priceMin = 0;
-    const lastLocalPriceTimeInMinutes = this.state.prices.legth ? this.state.prices[this.state.prices.length - 1].timeInMinutes : 0
+    let lastPrice = null;
+    const lastLocalPriceTimeInSeconds = this.state.prices.legth ? this.state.prices[this.state.prices.length - 1].timeInSeconds : 0
     for (const minuteData of chartDataDay) {
-      if (timeToMinutes(minuteData.minute) > lastLocalPriceTimeInMinutes && (minuteData.marketClose || minuteData.close)) {
+      const price = minuteData.marketClose || minuteData.close || lastPrice;
+      if (timeToSeconds(minuteData.minute) > lastLocalPriceTimeInSeconds) {
         prices.push({
-          price: minuteData.marketClose || minuteData.close,
-          timeInMinutes: timeToMinutes(minuteData.minute)
+          price,
+          timeInSeconds: timeToSeconds(minuteData.minute) - (9 * 60 * 60 + 30 * 60)
         });
-        simplePrices.push(minuteData.marketClose || minuteData.close)
+        simplePrices.push(price);
       }
-      console.log('%c⧭', 'color: #c71f16', timeToMinutes(minuteData.minute), lastLocalPriceTimeInMinutes);
+      lastPrice = price;
+      // console.log('%c⧭', 'color: #c71f16', timeToSeconds(minuteData.minute), lastLocalPricetimeInSeconds);
     }
-    console.log('%c⧭', 'color: #2516c7', prices, simplePrices);
+    // console.log('%c⧭', 'color: #2516c7', prices, simplePrices);
     this.setState(state => ({...state, prices}));
-    priceMax = Math.max(...simplePrices, this.state.previousClose);
-    priceMin = Math.min(...simplePrices, this.state.previousClose);
+    const priceMax = Math.max(...simplePrices, this.state.previousClose);
+    const priceMin = Math.min(...simplePrices, this.state.previousClose);
     this.setState(state => ({...state, priceMax}));
     this.setState(state => ({...state, priceMin}));
     console.log('%c⧭', 'color: #c7c116', ...simplePrices, this.state.previousClose);
@@ -77,21 +79,43 @@ class Stock extends Component {
     this.setState(state => ({...state, coefPricesToCanvas}));
   }
   modifyEverythingForCanvas() {
+    this.setState(state => ({...state, previousCloseModifiedForCanvas: (state.previousClose - this.state.priceMin) * this.state.coefPricesToCanvas}));
+    console.log('%c⧭', 'color: #b8ca10', this.state.previousCloseModifiedForCanvas);
     const pricesModifiedForCanvas = {
       positive: [],
       negative: []
     };
+    let lastData = {
+      sign: null,
+      time: null
+    }
+    let index = 0
     // this.setState(state => ({...state, previousClose: state.priceMin + (state.priceMax - state.priceMin) / 2}));
-    for (const [index, priceObj] of this.state.prices.entries()) {
+    for (const priceObj of this.state.prices) {
       const price = priceObj.price
+      const timeInSeconds = priceObj.timeInSeconds
       const sign = price >= this.state.previousClose ? 'positive' : 'negative';
+      if (lastData.sign !== sign && lastData.sign !== null) {
+        for (const temp of [lastData.sign, sign]) {
+          pricesModifiedForCanvas[temp].push({
+            timeInSeconds: (timeInSeconds + lastData.time) / 2, // average time
+            price: this.state.previousCloseModifiedForCanvas,
+            index
+          });
+          console.log('%c⧭', 'color: #c74b16', timeInSeconds, lastData.time, index);          
+          index++;
+        }
+      }
       pricesModifiedForCanvas[sign].push({
+        timeInSeconds,
         price: (price - this.state.priceMin) * this.state.coefPricesToCanvas,
         index
       });
+      lastData.sign = sign;
+      lastData.time = timeInSeconds;
+      index++;
     }
     this.setState(state => ({...state, pricesModifiedForCanvas: pricesModifiedForCanvas}));
-    this.setState(state => ({...state, previousCloseModifiedForCanvas: (state.previousClose - this.state.priceMin) * this.state.coefPricesToCanvas}));
   }
   draw() {
     const canvas = this.refs.canvas;

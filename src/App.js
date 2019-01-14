@@ -3,13 +3,13 @@ import React, { Component } from 'react';
 import Stock from './Stock';
 import './App.css';
 import io from 'socket.io-client';
-const socket = io('https://ws-api.iextrading.com/1.0/stock/chart/1d');
+const socket = io('https://ws-api.iextrading.com/1.0/last');
 
 class App extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      search: 'TSLA',
+      search: 'SNAP',
       symbolsListActive: [],
       symbolsActiveData: {},
       symbolsList: [],
@@ -47,6 +47,24 @@ class App extends Component {
   }
   componentDidMount() {
     this.getSymbolsList().then(() => this.search(this.state.search));
+    // const socket = io('https://ws-api.iextrading.com/1.0/tops')
+
+    // // Listen to the channel's messages
+    // socket.on('message', message => console.log(message))
+
+    // // Connect to the channel
+    // socket.on('connect', () => {
+
+    //   // Subscribe to topics (i.e. appl,fb,aig+)
+    //   socket.emit('subscribe', 'snap,fb,aig+')
+
+    //   // Unsubscribe from topics (i.e. aig+)
+    //   // socket.emit('unsubscribe', 'aig+')
+    // })
+
+    // // Disconnect from the channel
+    // socket.on('disconnect', () => console.log('Disconnected.'))
+
     console.log('%c⧭', 'color: #16a9c7', socket);
     socket.on('message', message => {
       // const close = JSON.parse(message).lastSalePrice
@@ -54,7 +72,8 @@ class App extends Component {
       // this.setState(state => ({ ...state, close }));
     })
     socket.on('connect', () => {
-      socket.emit('subscribe', 'aapl,snap,tsla')
+      console.log('%c%s', 'color: #c76f16', 'connect');
+      // socket.emit('subscribe', 'tsla')
       // socket.emit('unsubscribe', 'aig+')
     })
     socket.on('disconnect', () => console.log('Disconnected.'))
