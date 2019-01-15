@@ -19,6 +19,7 @@ class Stock extends Component {
       priceMax: null,
       coefPricesToCanvas: null
     };
+    this.canvas = React.createRef();
     this.getDataAndMakeChart = this.getDataAndMakeChart.bind(this);
     this.makeChart = this.makeChart.bind(this);
     this.draw = this.draw.bind(this);
@@ -50,7 +51,7 @@ class Stock extends Component {
     const chardDataDayReturnsYesterday = dateToday === chartDataDay[chartDataDay.length - 1].date;
     const objToGetPreviousCloseFrom = chartDataMonth[chartDataMonth.length - (chardDataDayReturnsYesterday ? 2 : 1)];
     const previousClose = objToGetPreviousCloseFrom.close;
-    console.log('%c⧭', 'color: #c79816', `${this.props.symbol}, pC:${previousClose}`);
+    // console.log('%c⧭', 'color: #c79816', `${this.props.symbol}, pC:${previousClose}`);
     this.setState(state => ({...state, previousClose}));
   }
   getPricesMaxMinAndCanvasCoef(chartDataDay) {
@@ -69,7 +70,7 @@ class Stock extends Component {
       lastPrice = price;
       // console.log('%c⧭', 'color: #c71f16', timeToSeconds(minuteData.minute), lastLocalPricetimeInSeconds);
     }
-    console.log('%c⧭', 'color: #2516c7', prices);
+    // console.log('%c⧭', 'color: #2516c7', prices);
     this.setState(state => ({...state, prices}));
     const priceMax = Math.max(...simplePrices, this.state.previousClose);
     const priceMin = Math.min(...simplePrices, this.state.previousClose);
@@ -117,10 +118,10 @@ class Stock extends Component {
       index++;
     }
     this.setState(state => ({...state, pricesModifiedForCanvas}));
-    console.log('%c', 'color: #86c716', this.state.pricesModifiedForCanvas);
+    // console.log('%c', 'color: #86c716', this.state.pricesModifiedForCanvas);
   }
   draw() {
-    const canvas = this.refs.canvas;
+    const canvas = this.canvas.current;
     const context = canvas.getContext('2d');
     context.clearRect(0, 0, canvas.width, canvas.height);
     drawPreviousCloseLine(context, this.state.previousCloseModifiedForCanvas);
@@ -130,6 +131,7 @@ class Stock extends Component {
   onSocketMessage() {
     socket.on('message', message => {
       message = JSON.parse(message);
+      if (message.symbol !== this.props.symbol) return;
       console.log(message);
       this.mergeSocketDataToPrices(message);
       this.draw();
@@ -143,16 +145,16 @@ class Stock extends Component {
     const lastLocalPriceTime = this.state.prices[this.state.prices.length - 1].timeInSeconds;
     const lastLocalPrice = this.state.prices[this.state.prices.length - 1].price;
     const messageTime = timeToSeconds(message.time)
-    console.log('%c⧭', 'color: #16c79e', lastLocalPriceTime, messageTime);
+    // console.log('%c⧭', 'color: #16c79e', lastLocalPriceTime, messageTime);
     if (messageTime > lastLocalPriceTime) {
       // to this.state.prices:
-      console.log('%c⧭1', 'color: #c7166f', this.state.prices);
+      // console.log('%c⧭1', 'color: #c7166f', this.state.prices);
       const pricesNew = this.state.prices.concat([{
         price: message.price,
         timeInSeconds: messageTime
       }])
       this.setState(state => ({...state, prices: pricesNew}));
-      console.log('%c⧭2', 'color: #c7166f', this.state.prices, this.state.pricesModifiedForCanvas);
+      // console.log('%c⧭2', 'color: #c7166f', this.state.prices, this.state.pricesModifiedForCanvas);
       // to this.state.priceMin/priceMax/coefPricesToCanvas:
       this.setState(state => ({...state, priceMax: Math.max(state.priceMax, message.price)}));
       this.setState(state => ({...state, priceMin: Math.min(state.priceMin, message.price)}));
@@ -178,7 +180,7 @@ class Stock extends Component {
         index
       });
       this.setState(state => ({...state, pricesModifiedForCanvas}));
-      console.log('%c', 'color: #86c716', this.state.pricesModifiedForCanvas);
+      // console.log('%c', 'color: #86c716', this.state.pricesModifiedForCanvas);
     }
   }
   modifyTimeForCanvas(timeInSeconds) {
@@ -205,7 +207,7 @@ class Stock extends Component {
           <p className="price">{lastPrice}</p>
           <p className={'change ' + (absoluteChange >= 0 ? 'positive' : 'negative')}>{absoluteChange} ({percentageChange}%)</p>
         </div>
-        <canvas ref="canvas" width="100" height="35"></canvas>
+        <canvas ref={this.canvas} width="100" height="35"></canvas>
       </div>
     );
   }

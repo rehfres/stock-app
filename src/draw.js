@@ -14,7 +14,7 @@ export function drawPreviousCloseLine(context, previousClose) {
 export function drawChart(context, prices, previousClose) {
   // previousClose = canvasHeight / 2;
   // console.log('%c⧭', 'color: #a66037', prices);
-  console.time(1)
+  // console.time(1)
   for (const sign of ['positive', 'negative']) {
     let lastData = {
       index: null,
@@ -35,7 +35,7 @@ export function drawChart(context, prices, previousClose) {
     context.lineTo(lastData.time * coefTimeToCanvas, canvasHeight - previousClose);
     fillChart(sign, context, previousClose);
   }
-  console.timeEnd(1)
+  // console.timeEnd(1)
 }
 
 function fillChart(sign, context, previousClose) {

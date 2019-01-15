@@ -19,12 +19,12 @@ console.log('%c⧭', 'color: #16a9c7', socket);
 socket.on('connect', () => {
   console.log('%c%s', 'color: #c76f16', 'connect');
 })
-socket.on('disconnect', () => console.log('Disconnected.'))
+// socket.on('disconnect', () => console.log('Disconnected.'))
 
 export const symbolsActiveData = {}
 
 export function startGettingSymbolData(symbol) {
-  symbolsActiveData[symbol] = {};
+  // symbolsActiveData[symbol] = {};
   socket.emit('subscribe', symbol);
   console.log('%c%s', 'color: #c716a1', symbol + ' subbed');
 }
