@@ -27,9 +27,9 @@ class App extends Component {
       })
   }
   search(event) {
-    const search = event.target ? event.target.value : event;
+    const search = (event.target ? event.target.value : event).toUpperCase();
     this.setState(state => ({...state, search}));
-    const searchList = this.state.symbolsList.filter(el => el.startsWith(search.toUpperCase())) || [];
+    const searchList = this.state.symbolsList.filter(el => el.startsWith(search)) || [];
     this.setState(state => ({...state, searchList: searchList}));
   }
   tryToAddSymbolChart(symbol) {
@@ -44,17 +44,14 @@ class App extends Component {
     return (
       <div className="App">
         <header className="App-header">
-          {/* <img src={logo} onClick={this.handleClick} className="App-logo" alt="logo" /> */}
-          {this.state.symbolsListActive.map(symbol => <Stock key={symbol} symbol={symbol}/>)}
-          <input type="text" placeholder="Search" value={this.state.search} onChange={this.search}/>
-          <ul>
-            {this.state.searchList.map(symbol => <li key={symbol}><button onClick={() => this.tryToAddSymbolChart(symbol)}>{symbol}</button></li>).slice(0, 10)}
+          <input className="search-bar" type="text" placeholder="Search" value={this.state.search} onChange={this.search}/>
+          <ul className="search-options">
+            {this.state.searchList.map(symbol => <li key={symbol}><button onMouseDown={() => this.tryToAddSymbolChart(symbol)}>{symbol}</button></li>).slice(0, 28)}
           </ul>
-          {/* <ul>
-            <li><button onClick={() => this.showRate('TSLA')}>TSLA</button></li>
-            <li><button onClick={() => this.showRate('SNAP')}>SNAP</button></li>
-          </ul> */}
         </header>
+        <div className="charts-container">
+          {this.state.symbolsListActive.map(symbol => <Stock key={symbol} symbol={symbol}/>)}
+        </div>
       </div>
     );
   }
