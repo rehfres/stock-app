@@ -26,6 +26,7 @@
   padding: 0;
   width: 100%;
   /* max-width: 500px; */
+  z-index: 1;
 }
 
 .search-bar:focus + .search-options {

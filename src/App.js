@@ -2,8 +2,8 @@ import React, { Component } from 'react';
 // import logo from './logo.svg';
 import Stock from './Stock';
 import './App.css';
-import { auth, getSymbolsFromDb, addSymbolToDb, deleteSymbolFromDb } from './firebase';
-// import { Container, Draggable } from 'react-smooth-dnd';
+import { auth, getSymbolsFromDb, addSymbolToDb, deleteSymbolFromDb, reorderSymbolsInDb } from './firebase';
+import { Container, Draggable } from 'react-smooth-dnd';
 
 class App extends Component {
   constructor(props) {
@@ -15,6 +15,7 @@ class App extends Component {
       searchList: []
     };
     this.search = this.search.bind(this);
+    this.reorderCharts = this.reorderCharts.bind(this);
   }
   handleClick() {
     console.log(this.state.counter);
@@ -32,6 +33,7 @@ class App extends Component {
     const symbolsListActive = await getSymbolsFromDb();
     console.log('%c⧭', 'color: #2516c7', symbolsListActive);
     this.setState(state => ({...state, symbolsListActive}));
+    console.log('%c⧭', 'color: #c76f16', this.state.symbolsListActive);
   }
   search(event) {
     const search = (event.target ? event.target.value : event).toUpperCase();
@@ -44,6 +46,18 @@ class App extends Component {
       this.setState(state => ({...state, symbolsListActive: state.symbolsListActive.concat([symbol])}));
       return addSymbolToDb(symbol);
     }
+  }
+  reorderCharts(dragResult) {
+    console.log('%c⧭', 'color: #6c16c7', dragResult);
+    console.log('%c⧭', 'color: #c76f16', this.state.symbolsListActive);
+    const { removedIndex, addedIndex } = dragResult;
+    if (removedIndex === addedIndex) return
+    const symbolsListActive = this.state.symbolsListActive.slice();
+    const removedChartSymbol = symbolsListActive.splice(removedIndex, 1)[0]
+    symbolsListActive.splice(addedIndex, 0, removedChartSymbol);
+    console.log('%c⧭', 'color: #1663c7', symbolsListActive);
+    this.setState(state => ({...state, symbolsListActive}));
+    reorderSymbolsInDb(symbolsListActive);
   }
   componentDidMount() {
     auth().then(() => this.getSymbolsListActive());
@@ -59,7 +73,13 @@ class App extends Component {
           </ul>
         </header>
         <div className="charts-container">
-          {this.state.symbolsListActive.map(symbol => <Stock key={symbol} symbol={symbol}/>)}
+          <Container onDrop={this.reorderCharts}>
+            {this.state.symbolsListActive.map(symbol => (
+              <Draggable key={symbol}>
+                <Stock symbol={symbol}/>
+              </Draggable>
+            ))}
+          </Container>
         </div>
       </div>
     );

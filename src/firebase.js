@@ -39,6 +39,12 @@ export function getSymbolsFromDb() {
   });
 }
 
+export function reorderSymbolsInDb(symbolsInNewOrder) {
+  return db.collection("users").doc(userId).update({
+    symbols: symbolsInNewOrder
+  });
+}
+
 export function addSymbolToDb(symbol) {
   return db.collection("users").doc(userId).update({
     symbols: firebase.firestore.FieldValue.arrayUnion(symbol)

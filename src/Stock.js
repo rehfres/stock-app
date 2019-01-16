@@ -133,7 +133,7 @@ class Stock extends Component {
     socket.on('message', message => {
       message = JSON.parse(message);
       if (message.symbol !== this.props.symbol) return;
-      console.log(message);
+      // console.log(message);
       this.mergeSocketDataToPrices(message);
       this.draw();
       // symbolsActiveData[symbol] = {
