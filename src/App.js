@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 // import logo from './logo.svg';
 import Stock from './Stock';
 import './App.css';
-import './firebase'
+import { auth, getSymbolsFromDb, addSymbolToDb, deleteSymbolFromDb } from './firebase'
 
 class App extends Component {
   constructor(props) {
@@ -27,6 +27,11 @@ class App extends Component {
         this.setState(state => ({...state, searchList: state.symbolsList}));
       })
   }
+  async getSymbolsListActive() {
+    const symbolsListActive = await getSymbolsFromDb();
+    console.log('%c⧭', 'color: #2516c7', symbolsListActive);
+    this.setState(state => ({...state, symbolsListActive}));
+  }
   search(event) {
     const search = (event.target ? event.target.value : event).toUpperCase();
     this.setState(state => ({...state, search}));
@@ -36,9 +41,11 @@ class App extends Component {
   tryToAddSymbolChart(symbol) {
     if (!this.state.symbolsListActive.some(el => el === symbol)) {
       this.setState(state => ({...state, symbolsListActive: state.symbolsListActive.concat([symbol])}));
+      return addSymbolToDb(symbol);
     }
   }
   componentDidMount() {
+    auth().then(() => this.getSymbolsListActive());
     this.getSymbolsList().then(() => this.search(this.state.search));
   }
   render() {
