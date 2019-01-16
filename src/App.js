@@ -2,7 +2,8 @@ import React, { Component } from 'react';
 // import logo from './logo.svg';
 import Stock from './Stock';
 import './App.css';
-import { auth, getSymbolsFromDb, addSymbolToDb, deleteSymbolFromDb } from './firebase'
+import { auth, getSymbolsFromDb, addSymbolToDb, deleteSymbolFromDb } from './firebase';
+// import { Container, Draggable } from 'react-smooth-dnd';
 
 class App extends Component {
   constructor(props) {
