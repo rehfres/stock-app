@@ -4,7 +4,7 @@ import './Stock.css';
 import { drawChart } from './draw.js';
 import timeToSeconds from './timeToSeconds.js';
 import Big from 'big.js';
-import { socket, subscribeToWS } from './Socket';
+import { socket, subscribeToWS, unsubscribeFromWS } from './Socket';
 
 class Stock extends Component {
   constructor(props) {
@@ -18,9 +18,9 @@ class Stock extends Component {
       priceMin: null,
       priceMax: null,
       coefPricesToCanvas: null,
-      webSocketsMessagesCounter: 0,
-      isMounted: false
+      webSocketsMessagesCounter: 0
     };
+    this.isMounted = false
     this.canvas = React.createRef();
     this.getDataAndMakeChart = this.getDataAndMakeChart.bind(this);
     this.makeChart = this.makeChart.bind(this);
@@ -54,7 +54,7 @@ class Stock extends Component {
     const objToGetPreviousCloseFrom = chartDataMonth[chartDataMonth.length - (chardDataDayReturnsYesterday ? 2 : 1)];
     const previousClose = objToGetPreviousCloseFrom.close;
     // console.log('%c⧭', 'color: #c79816', `${this.props.symbol}, pC:${previousClose}`);
-    if (this.state.isMounted) this.setState(state => ({...state, previousClose}));
+    this.setState(state => ({...state, previousClose}));
   }
   getPricesMaxMinAndCanvasCoef(chartDataDay) {
     const prices = [], simplePrices = [];
@@ -76,10 +76,10 @@ class Stock extends Component {
     const priceMax = Math.max(...simplePrices, this.state.previousClose);
     const priceMin = Math.min(...simplePrices, this.state.previousClose);
     const coefPricesToCanvas = this.props.canvasSize.height / (priceMax - priceMin);
-    if (this.state.isMounted) this.setState(state => ({...state, prices, priceMax, priceMin, coefPricesToCanvas}));
+    this.setState(state => ({...state, prices, priceMax, priceMin, coefPricesToCanvas}));
   }
   modifyEverythingForCanvas() {
-    if (this.state.isMounted) this.setState(state => ({...state, previousCloseModifiedForCanvas: (state.previousClose - this.state.priceMin) * this.state.coefPricesToCanvas}));
+    this.setState(state => ({...state, previousCloseModifiedForCanvas: (state.previousClose - this.state.priceMin) * this.state.coefPricesToCanvas}));
     // console.log('%c⧭', 'color: #b8ca10', this.state.previousCloseModifiedForCanvas);
     const pricesModifiedForCanvas = {
       positive: [],
@@ -90,7 +90,7 @@ class Stock extends Component {
       time: null
     }
     let index = 0;
-    // if (this.state.isMounted) this.setState(state => ({...state, previousClose: state.priceMin + (state.priceMax - state.priceMin) / 2}));
+    // this.setState(state => ({...state, previousClose: state.priceMin + (state.priceMax - state.priceMin) / 2}));
     for (const priceObj of this.state.prices) {
       const price = priceObj.price;
       const timeInSeconds = this.modifyTimeForCanvas(priceObj.timeInSeconds);
@@ -115,7 +115,7 @@ class Stock extends Component {
       lastData.time = timeInSeconds;
       index++;
     }
-    if (this.state.isMounted) this.setState(state => ({...state, pricesModifiedForCanvas}));
+    this.setState(state => ({...state, pricesModifiedForCanvas}));
     // console.log('%c', 'color: #86c716', this.state.pricesModifiedForCanvas);
   }
   draw() {
@@ -140,7 +140,8 @@ class Stock extends Component {
     })
   }
   mergeSocketDataToPrices(message) {
-    if (this.state.isMounted) this.setState(state => ({...state, webSocketsMessagesCounter: state.webSocketsMessagesCounter + 1}));
+    console.log('%c⧭', 'color: #16c72e', this.isMounted);
+    this.setState(state => ({...state, webSocketsMessagesCounter: state.webSocketsMessagesCounter + 1}));
     const lastLocalPriceTime = this.state.prices[this.state.prices.length - 1].timeInSeconds;
     const lastLocalPrice = this.state.prices[this.state.prices.length - 1].price;
     const messageTime = timeToSeconds(message.time);
@@ -158,14 +159,14 @@ class Stock extends Component {
       price: message.price,
       timeInSeconds: messageTime
     }])
-    if (this.state.isMounted) this.setState(state => ({...state, prices: pricesNew}));
+    this.setState(state => ({...state, prices: pricesNew}));
     // console.log('%c⧭2', 'color: #c7166f', this.state.prices, this.state.pricesModifiedForCanvas);
 
     // to this.state.priceMin/priceMax/coefPricesToCanvas:
     const priceMax = Math.max(this.state.priceMax, message.price);
     const priceMin = Math.min(this.state.priceMin, message.price)
     const coefPricesToCanvas = this.props.canvasSize.height / (priceMax - priceMin);
-    if (this.state.isMounted) this.setState(state => ({...state, priceMax, priceMin, coefPricesToCanvas }));
+    this.setState(state => ({...state, priceMax, priceMin, coefPricesToCanvas }));
 
     // to this.state.pricesModifiedForCanvas:
     const pricesModifiedForCanvas = JSON.parse(JSON.stringify(this.state.pricesModifiedForCanvas));
@@ -187,14 +188,14 @@ class Stock extends Component {
       price: (message.price - this.state.priceMin) * this.state.coefPricesToCanvas,
       index
     });
-    if (this.state.isMounted) this.setState(state => ({...state, pricesModifiedForCanvas}));
+    this.setState(state => ({...state, pricesModifiedForCanvas}));
     // console.log('%c', 'color: #86c716', this.state.pricesModifiedForCanvas);
   }
   modifyTimeForCanvas(timeInSeconds) {
     return timeInSeconds - (9 * 60 * 60 + 30 * 60);
   }
   componentDidMount() {
-    this.setState(state => ({...state, isMounted: true}));
+    this.isMounted = true;
     Big.DP = 2;
     this.getDataAndMakeChart().then(() => {
       subscribeToWS(this.props.symbol);
@@ -202,7 +203,8 @@ class Stock extends Component {
     })
   }
   componentWillUnmount() {
-    this.setState(state => ({...state, isMounted: false}));
+    unsubscribeFromWS(this.props.symbol);
+    this.isMounted = false;
   }
   render() {
     if (!this.state.prices.length) return null;

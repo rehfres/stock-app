@@ -4,6 +4,7 @@
   justify-content: space-between;
   height: 55px;
   width: 190px;
+  /* border: 1px solid gray; */
 }
 .text {
   color: black;
