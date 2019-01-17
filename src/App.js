@@ -5,6 +5,7 @@ import './App.css';
 import { maybeAuthAndGetUserId, getSymbolsFromDb, addSymbolToDb, deleteSymbolFromDb, reorderSymbolsInDb } from './firebase';
 import { Container, Draggable } from 'react-smooth-dnd';
 import { initCanvasSize } from './draw'
+import { unsubscribeFromWS } from './Socket'
 
 class App extends Component {
   constructor(props) {
@@ -59,7 +60,8 @@ class App extends Component {
     if (removedIndex === addedIndex) return
     const symbolsListActive = this.state.symbolsListActive.slice();
     const removedChartSymbol = symbolsListActive.splice(removedIndex, 1)[0]
-    symbolsListActive.splice(addedIndex, 0, removedChartSymbol);
+    if (addedIndex) symbolsListActive.splice(addedIndex, 0, removedChartSymbol);
+    else unsubscribeFromWS(removedChartSymbol);
     console.log('%c⧭', 'color: #1663c7', symbolsListActive);
     this.setState(state => ({...state, symbolsListActive}));
     reorderSymbolsInDb(symbolsListActive);
@@ -87,7 +89,7 @@ class App extends Component {
           </ul>
         </header>
         <div className="charts-container">
-          <Container onDrop={this.reorderCharts}>
+          <Container onDrop={this.reorderCharts} removeOnDropOut>
             {this.state.symbolsListActive.map(symbol => (
               <Draggable key={symbol}>
                 <Stock symbol={symbol} canvasSize={this.state.canvasSize}/>

@@ -20,7 +20,7 @@ function drawPreviousCloseLine(context, previousClose) {
 export function drawChart(canvas, context, prices, previousClose) {
 
   drawPreviousCloseLine(context, previousClose);
-  console.log('%c⧭', 'color: #1663c7', canvasWidth, canvasHeight, secondsInaDay);
+  // console.log('%c⧭', 'color: #1663c7', canvasWidth, canvasHeight, secondsInaDay);
 // previousClose = canvasHeight / 2;
   // console.log('%c⧭', 'color: #a66037', prices);
   // console.time(1)

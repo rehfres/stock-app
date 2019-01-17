@@ -23,8 +23,14 @@ socket.on('connect', () => {
 
 export const symbolsActiveData = {}
 
-export function startGettingSymbolData(symbol) {
+export function subscribeToWS(symbol) {
   // symbolsActiveData[symbol] = {};
   socket.emit('subscribe', symbol);
   console.log('%c%s', 'color: #c716a1', symbol + ' subbed');
+}
+
+export function unsubscribeFromWS(symbol) {
+  // symbolsActiveData[symbol] = {};
+  socket.emit('unsubscribe', symbol);
+  console.log('%c%s', 'color: #bd8fb3', symbol + ' unsubbed');
 }
