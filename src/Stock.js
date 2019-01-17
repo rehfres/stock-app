@@ -27,6 +27,7 @@ class Stock extends Component {
     this.setPreviousClose = this.setPreviousClose.bind(this);
     this.modifyEverythingForCanvas = this.modifyEverythingForCanvas.bind(this);
     this.getPricesMaxMinAndCanvasCoef = this.getPricesMaxMinAndCanvasCoef.bind(this);
+    this.initResizeCanvas = this.initResizeCanvas.bind(this);
   }
   async getDataAndMakeChart() {
     const chartData = await fetch('https://api.iextrading.com/1.0/stock/' + this.props.symbol + '/chart/1d')
@@ -195,7 +196,16 @@ class Stock extends Component {
   modifyTimeForCanvas(timeInSeconds) {
     return timeInSeconds - (9 * 60 * 60 + 30 * 60);
   }
+  initResizeCanvas() {
+    const canvas = this.canvas.current;
+    const scale = .5 //window.devicePixelRatio;
+    console.log('%c⧭', 'color: #c7166f', this.props.symbol, canvas.height, scale);
+    canvas.height = canvas.height * scale;
+    console.log('%c⧭', 'color: #c7166f', this.props.symbol, canvas.height, scale);
+    canvas.width = canvas.width * scale;
+  }
   componentDidMount() {
+    this.initResizeCanvas();
     Big.DP = 2;
     this.getDataAndMakeChart().then(() => {
       startGettingSymbolData(this.props.symbol);

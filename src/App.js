@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 // import logo from './logo.svg';
 import Stock from './Stock';
 import './App.css';
-import { auth, getSymbolsFromDb, addSymbolToDb, deleteSymbolFromDb, reorderSymbolsInDb } from './firebase';
+import { maybeAuthAndGetUserId, getSymbolsFromDb, addSymbolToDb, deleteSymbolFromDb, reorderSymbolsInDb } from './firebase';
 import { Container, Draggable } from 'react-smooth-dnd';
 
 class App extends Component {
@@ -60,12 +60,13 @@ class App extends Component {
     reorderSymbolsInDb(symbolsListActive);
   }
   componentDidMount() {
-    auth().then(() => this.getSymbolsListActive());
+    maybeAuthAndGetUserId().then(() => this.getSymbolsListActive());
     this.getSymbolsList().then(() => this.search(this.state.search));
   }
   render() {
     return (
       <div className="App">
+        <p>{window.devicePixelRatio}</p>
         <header className="App-header">
           <input className="search-bar" type="text" placeholder="Search" value={this.state.search} onChange={this.search}/>
           <ul className="search-options">

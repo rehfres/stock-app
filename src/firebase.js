@@ -17,6 +17,27 @@ db.settings({timestampsInSnapshots: true});
 var provider = new firebase.auth.GoogleAuthProvider();
 var userId;
 
+export function maybeAuthAndGetUserId() {
+  return new Promise((resolve) => {
+    firebase.auth().onAuthStateChanged(user => {
+      if (user) {
+        userId = user.uid;
+        resolve(user);
+      } else {
+        resolve(auth());
+      }
+    });
+  })
+}
+
+export function signout() {
+  return firebase.auth().signOut().then(() => {
+  }).catch(function(error) {
+    console.log(error);
+    alert(error.message);
+  });
+}
+
 export function auth() {
   return firebase.auth().signInWithPopup(provider).then(result => {
     userId = result.user.uid;
