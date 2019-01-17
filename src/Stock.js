@@ -27,7 +27,6 @@ class Stock extends Component {
     this.setPreviousClose = this.setPreviousClose.bind(this);
     this.modifyEverythingForCanvas = this.modifyEverythingForCanvas.bind(this);
     this.getPricesMaxMinAndCanvasCoef = this.getPricesMaxMinAndCanvasCoef.bind(this);
-    this.initResizeCanvas = this.initResizeCanvas.bind(this);
   }
   async getDataAndMakeChart() {
     const chartData = await fetch('https://api.iextrading.com/1.0/stock/' + this.props.symbol + '/chart/1d')
@@ -73,14 +72,10 @@ class Stock extends Component {
       // console.log('%c⧭', 'color: #c71f16', timeToSeconds(minuteData.minute), lastLocalPricetimeInSeconds);
     }
     // console.log('%c⧭', 'color: #2516c7', prices);
-    this.setState(state => ({...state, prices}));
     const priceMax = Math.max(...simplePrices, this.state.previousClose);
     const priceMin = Math.min(...simplePrices, this.state.previousClose);
-    this.setState(state => ({...state, priceMax}));
-    this.setState(state => ({...state, priceMin}));
-    // console.log('%c⧭', 'color: #c7c116', ...simplePrices, this.state.previousClose);
-    const coefPricesToCanvas = 35 /*canvas height */ / (priceMax - priceMin);
-    this.setState(state => ({...state, coefPricesToCanvas}));
+    const coefPricesToCanvas = this.props.canvasSize.height / (priceMax - priceMin);
+    this.setState(state => ({...state, prices, priceMax, priceMin, coefPricesToCanvas}));
   }
   modifyEverythingForCanvas() {
     this.setState(state => ({...state, previousCloseModifiedForCanvas: (state.previousClose - this.state.priceMin) * this.state.coefPricesToCanvas}));
@@ -126,8 +121,7 @@ class Stock extends Component {
     const canvas = this.canvas.current;
     const context = canvas.getContext('2d');
     context.clearRect(0, 0, canvas.width, canvas.height);
-    drawPreviousCloseLine(context, this.state.previousCloseModifiedForCanvas);
-    drawChart(context, this.state.pricesModifiedForCanvas, this.state.previousCloseModifiedForCanvas);
+    drawChart(canvas, context, this.state.pricesModifiedForCanvas, this.state.previousCloseModifiedForCanvas);
     // fillChart(context, this.state.previousCloseModifiedForCanvas);
   }
   onSocketMessage() {
@@ -166,9 +160,10 @@ class Stock extends Component {
     // console.log('%c⧭2', 'color: #c7166f', this.state.prices, this.state.pricesModifiedForCanvas);
 
     // to this.state.priceMin/priceMax/coefPricesToCanvas:
-    this.setState(state => ({...state, priceMax: Math.max(state.priceMax, message.price)}));
-    this.setState(state => ({...state, priceMin: Math.min(state.priceMin, message.price)}));
-    this.setState(state => ({...state, coefPricesToCanvas: 35 /*canvas height */ / (state.priceMax - state.priceMin)}));
+    const priceMax = Math.max(this.state.priceMax, message.price);
+    const priceMin = Math.min(this.state.priceMin, message.price)
+    const coefPricesToCanvas = this.props.canvasSize.height / (priceMax - priceMin);
+    this.setState(state => ({...state, priceMax, priceMin, coefPricesToCanvas }));
 
     // to this.state.pricesModifiedForCanvas:
     const pricesModifiedForCanvas = JSON.parse(JSON.stringify(this.state.pricesModifiedForCanvas));
@@ -196,16 +191,7 @@ class Stock extends Component {
   modifyTimeForCanvas(timeInSeconds) {
     return timeInSeconds - (9 * 60 * 60 + 30 * 60);
   }
-  initResizeCanvas() {
-    const canvas = this.canvas.current;
-    const scale = .5 //window.devicePixelRatio;
-    console.log('%c⧭', 'color: #c7166f', this.props.symbol, canvas.height, scale);
-    canvas.height = canvas.height * scale;
-    console.log('%c⧭', 'color: #c7166f', this.props.symbol, canvas.height, scale);
-    canvas.width = canvas.width * scale;
-  }
   componentDidMount() {
-    this.initResizeCanvas();
     Big.DP = 2;
     this.getDataAndMakeChart().then(() => {
       startGettingSymbolData(this.props.symbol);
@@ -226,7 +212,7 @@ class Stock extends Component {
           <p className="price">{lastPrice}</p>
           <p className={'change ' + (absoluteChange >= 0 ? 'positive' : 'negative')}>{absoluteChange} ({percentageChange}%)</p>
         </div>
-        <canvas ref={this.canvas} width="100" height="35"></canvas>
+        <canvas ref={this.canvas} width={this.props.canvasSize.width} height={this.props.canvasSize.height}></canvas>
       </div>
     );
   }

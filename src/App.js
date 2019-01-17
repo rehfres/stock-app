@@ -4,6 +4,7 @@ import Stock from './Stock';
 import './App.css';
 import { maybeAuthAndGetUserId, getSymbolsFromDb, addSymbolToDb, deleteSymbolFromDb, reorderSymbolsInDb } from './firebase';
 import { Container, Draggable } from 'react-smooth-dnd';
+import { initCanvasSize } from './draw'
 
 class App extends Component {
   constructor(props) {
@@ -12,10 +13,15 @@ class App extends Component {
       search: 'SNAP',
       symbolsListActive: [],
       symbolsList: [],
-      searchList: []
+      searchList: [],
+      canvasSize: {
+        height: 35,
+        width: 100
+      }
     };
     this.search = this.search.bind(this);
     this.reorderCharts = this.reorderCharts.bind(this);
+    this.initCanvasSizes = this.initCanvasSizes.bind(this);
   }
   handleClick() {
     console.log(this.state.counter);
@@ -25,8 +31,8 @@ class App extends Component {
     return fetch('https://api.iextrading.com/1.0/ref-data/symbols?filter=symbol')
       .then(response => response.json())
       .then(r => {
-        this.setState(state => ({...state, symbolsList: r.map(el => el.symbol)}));
-        this.setState(state => ({...state, searchList: state.symbolsList}));
+        const symbolsList = r.map(el => el.symbol)
+        this.setState(state => ({...state, symbolsList, searchList: state.symbolsList}));
       })
   }
   async getSymbolsListActive() {
@@ -37,9 +43,8 @@ class App extends Component {
   }
   search(event) {
     const search = (event.target ? event.target.value : event).toUpperCase();
-    this.setState(state => ({...state, search}));
     const searchList = this.state.symbolsList.filter(el => el.startsWith(search)) || [];
-    this.setState(state => ({...state, searchList: searchList}));
+    this.setState(state => ({...state, searchList: searchList, search}));
   }
   tryToAddSymbolChart(symbol) {
     if (!this.state.symbolsListActive.some(el => el === symbol)) {
@@ -59,7 +64,15 @@ class App extends Component {
     this.setState(state => ({...state, symbolsListActive}));
     reorderSymbolsInDb(symbolsListActive);
   }
+  initCanvasSizes() {
+    this.setState(state => ({...state, canvasSize: {
+      height: 35 * 2, //window.devicePixelRatio,
+      width: 100 * 2//window.devicePixelRatio
+    }}), () => initCanvasSize(this.state.canvasSize));
+    
+  }
   componentDidMount() {
+    this.initCanvasSizes();
     maybeAuthAndGetUserId().then(() => this.getSymbolsListActive());
     this.getSymbolsList().then(() => this.search(this.state.search));
   }
@@ -77,7 +90,7 @@ class App extends Component {
           <Container onDrop={this.reorderCharts}>
             {this.state.symbolsListActive.map(symbol => (
               <Draggable key={symbol}>
-                <Stock symbol={symbol}/>
+                <Stock symbol={symbol} canvasSize={this.state.canvasSize}/>
               </Draggable>
             ))}
           </Container>

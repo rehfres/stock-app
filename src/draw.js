@@ -1,7 +1,13 @@
-var canvasWidth = 100, canvasHeight = 35, secondsInaDay = 6 * 60 * 60 + 30 * 60;
-var coefTimeToCanvas = canvasWidth / secondsInaDay;
+var canvasWidth, canvasHeight, coefTimeToCanvas, secondsInaDay = 6 * 60 * 60 + 30 * 60;
 
-export function drawPreviousCloseLine(context, previousClose) {
+export function initCanvasSize(size) {
+  console.log('%c⧭', 'color: #c74b16', size);
+  canvasWidth = size.width;
+  canvasHeight = size.height;
+  coefTimeToCanvas = canvasWidth / secondsInaDay;
+}
+
+function drawPreviousCloseLine(context, previousClose) {
   // previousClose = canvasHeight / 2;
   context.beginPath();
   context.moveTo(0, canvasHeight - previousClose);
@@ -11,8 +17,11 @@ export function drawPreviousCloseLine(context, previousClose) {
   context.stroke();
 }
 
-export function drawChart(context, prices, previousClose) {
-  // previousClose = canvasHeight / 2;
+export function drawChart(canvas, context, prices, previousClose) {
+
+  drawPreviousCloseLine(context, previousClose);
+  console.log('%c⧭', 'color: #1663c7', canvasWidth, canvasHeight, secondsInaDay);
+// previousClose = canvasHeight / 2;
   // console.log('%c⧭', 'color: #a66037', prices);
   // console.time(1)
   for (const sign of ['positive', 'negative']) {
