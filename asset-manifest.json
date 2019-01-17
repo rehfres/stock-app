@@ -1,13 +1,13 @@
 {
   "main.css": "/stock-app/static/css/main.b2af3d4b.chunk.css",
-  "main.js": "/stock-app/static/js/main.d96d6893.chunk.js",
-  "main.js.map": "/stock-app/static/js/main.d96d6893.chunk.js.map",
+  "main.js": "/stock-app/static/js/main.3b9a5d4a.chunk.js",
+  "main.js.map": "/stock-app/static/js/main.3b9a5d4a.chunk.js.map",
   "static/js/1.05b04880.chunk.js": "/stock-app/static/js/1.05b04880.chunk.js",
   "static/js/1.05b04880.chunk.js.map": "/stock-app/static/js/1.05b04880.chunk.js.map",
   "runtime~main.js": "/stock-app/static/js/runtime~main.5de46911.js",
   "runtime~main.js.map": "/stock-app/static/js/runtime~main.5de46911.js.map",
   "static/css/main.b2af3d4b.chunk.css.map": "/stock-app/static/css/main.b2af3d4b.chunk.css.map",
   "index.html": "/stock-app/index.html",
-  "precache-manifest.578c26a5ebaeb98affbc42ea8c97e5c8.js": "/stock-app/precache-manifest.578c26a5ebaeb98affbc42ea8c97e5c8.js",
+  "precache-manifest.e483cf8ebabbd8548cf87d9a6285b864.js": "/stock-app/precache-manifest.e483cf8ebabbd8548cf87d9a6285b864.js",
   "service-worker.js": "/stock-app/service-worker.js"
 }
