@@ -17,20 +17,20 @@ db.settings({timestampsInSnapshots: true});
 var provider = new firebase.auth.GoogleAuthProvider();
 var userId;
 
-export function maybeAuthAndGetUserId() {
+export function tryToGetUserId() {
   return new Promise((resolve) => {
     firebase.auth().onAuthStateChanged(user => {
       if (user) {
         userId = user.uid;
-        resolve(user);
+        resolve(true);
       } else {
-        resolve(auth());
+        resolve(false);
       }
     });
   })
 }
 
-export function signout() {
+export function signOut() {
   return firebase.auth().signOut().then(() => {
   }).catch(function(error) {
     console.log(error);
@@ -38,8 +38,11 @@ export function signout() {
   });
 }
 
-export function auth() {
-  return firebase.auth().signInWithPopup(provider).then(result => {
+export function signIn() {
+  // provider.setCustomParameters({
+  //   prompt: 'select_account'
+  // });
+  return firebase.auth().signInWithRedirect(provider).then(result => {
     userId = result.user.uid;
   }).catch(error => {
     console.log(error);

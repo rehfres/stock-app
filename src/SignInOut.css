@@ -1,0 +1,55 @@
+.button {
+  display: flex;
+  height: 40px;
+  width: 178px;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
+  transition: .2s ease;
+  user-select: none;
+  margin: auto auto 16px;
+}
+
+@media (min-width: 500px) {
+  .button {
+    position: absolute;
+    width: unset;
+    top: 55px;
+    right: 30px;
+    margin: unset;
+  }
+}
+
+@media (min-width: 1000px) {
+  .button {
+    right: 55px;
+  }
+}
+
+.button:active {
+  background: #eee;
+  box-shadow: 0 1px 1px 0 rgba(0,0,0,0.14), 0 2px 1px -1px rgba(0,0,0,0.12), 0 1px 3px 0 rgba(0,0,0,0.20);
+}
+
+.button__logo {
+  padding: 0 8px;
+  height: 18px;
+  margin: auto 0;
+}
+
+.button__logo img {
+  height: 18px;
+}
+
+@import url('https://fonts.googleapis.com/css?family=Roboto');
+
+.button__text {
+  padding: 0 8px 0 16px;
+  margin: auto 0;
+  font-family: 'Roboto';
+  font-size: 14px;
+}
+
+.signed-in .button__text {
+  padding: 0 16px;
+}

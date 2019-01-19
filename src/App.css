@@ -1,10 +1,14 @@
+.App {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
 
 .App-header {
   height: 40px;
-  margin: 2px 5px;
+  margin: 5px 5px 2px;
   position: relative;
 }
-
 
 .search-bar {
   width: 100%;
@@ -15,12 +19,19 @@
   padding: 0 5px;
   border: none;
   box-sizing: border-box;
+  outline: -webkit-focus-ring-color auto 5px;
+  outline-color: #e6b5e0bf;
+  transition: .2s;
+}
+
+.search-bar:focus {
+  outline-color: rgb(77, 144, 254);
 }
 
 .search-options {
   display: none;
   position: absolute;
-  top: calc(100% + 1px);
+  top: calc(100% + 5px);
   left: 0;
   margin: 0;
   padding: 0;
@@ -31,11 +42,16 @@
 
 .search-bar:focus + .search-options {
   display: unset;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
 }
 
 
 .search-options > li {
   height: 40px;
+}
+
+.search-options > li + li {
+  border-top: 1px solid #f7f7f7;
 }
 
 .search-options button {
@@ -54,8 +70,9 @@
 }
 
 .charts-container {
-  margin: 10px 10px;
-  display: flex;
-  flex-wrap: wrap;
-  flex-direction: column;
+  margin: 5px 21px;
+  width: 190px;
+  /* display: flex;
+  flex-wrap: wrap; */
+  /* flex-direction: column; */
 }

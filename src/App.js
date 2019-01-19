@@ -2,29 +2,33 @@ import React, { Component } from 'react';
 // import logo from './logo.svg';
 import Stock from './Stock';
 import './App.css';
-import { maybeAuthAndGetUserId, getSymbolsFromDb, addSymbolToDb, deleteSymbolFromDb, reorderSymbolsInDb } from './firebase';
+import { tryToGetUserId, signIn, signOut, getSymbolsFromDb, addSymbolToDb, deleteSymbolFromDb, reorderSymbolsInDb } from './firebase';
 import { Container, Draggable } from 'react-smooth-dnd';
 import { initCanvasSize } from './draw'
+import SignInOut from './SignInOut'
 
 class App extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      search: 'SNAP',
+      search: '',
       symbolsListActive: [],
       symbolsList: [],
       searchList: [],
       canvasSize: {
         height: 35,
         width: 100
-      }
+      },
+      counter: 0,
+      signedIn: null
     };
     this.search = this.search.bind(this);
     this.reorderCharts = this.reorderCharts.bind(this);
     this.initCanvasSizes = this.initCanvasSizes.bind(this);
+    this.signInOut = this.signInOut.bind(this);
   }
   handleClick() {
-    console.log(this.state.counter);
+    console.log(1, this.state.counter);
     this.setState(state => ({ counter: state.counter + 1 }));
   }
   getSymbolsList() {
@@ -49,7 +53,7 @@ class App extends Component {
   tryToAddSymbolChart(symbol) {
     if (!this.state.symbolsListActive.some(el => el === symbol)) {
       this.setState(state => ({...state, symbolsListActive: state.symbolsListActive.concat([symbol])}));
-      return addSymbolToDb(symbol);
+      return this.state.signedIn ? addSymbolToDb(symbol) : null;
     }
   }
   reorderCharts(dragResult) {
@@ -62,24 +66,41 @@ class App extends Component {
     if (addedIndex) symbolsListActive.splice(addedIndex, 0, removedChartSymbol);
     console.log('%c⧭', 'color: #1663c7', symbolsListActive);
     this.setState(state => ({...state, symbolsListActive}));
-    reorderSymbolsInDb(symbolsListActive);
+    if (this.state.signedIn) reorderSymbolsInDb(symbolsListActive);
   }
   initCanvasSizes() {
     this.setState(state => ({...state, canvasSize: {
-      height: 35 * 2, //window.devicePixelRatio,
-      width: 100 * 2//window.devicePixelRatio
+      height: 35 * window.devicePixelRatio,
+      width: 100 * window.devicePixelRatio
     }}), () => initCanvasSize(this.state.canvasSize));
-    
+  }
+  signInOut() {
+    if (!this.state.signedIn) {
+      signIn().then(() => {
+        this.setState(state => ({...state, signedIn: true}));
+        this.getSymbolsListActive()
+      });
+    } else {
+      signOut().then(() => {
+        this.setState(state => ({...state, signedIn: false, symbolsListActive: []}));
+      });
+    }
   }
   componentDidMount() {
     this.initCanvasSizes();
-    maybeAuthAndGetUserId().then(() => this.getSymbolsListActive());
+    tryToGetUserId().then(signedIn => {
+      console.log('%c⧭s', 'color: #16c7a1', signedIn);
+      this.setState(state => ({...state, signedIn}));
+      if (signedIn) {
+        this.getSymbolsListActive()
+      }
+    });
     this.getSymbolsList().then(() => this.search(this.state.search));
   }
   render() {
     return (
       <div className="App">
-        <p>{window.devicePixelRatio}</p>
+        {/* <p>{window.devicePixelRatio}</p> */}
         <header className="App-header">
           <input className="search-bar" type="text" placeholder="Search" value={this.state.search} onChange={this.search}/>
           <ul className="search-options">
@@ -95,6 +116,7 @@ class App extends Component {
             ))}
           </Container>
         </div>
+        {this.state.signedIn !== null && <SignInOut atClick={this.signInOut} signedIn={this.state.signedIn}/>}
       </div>
     );
   }
