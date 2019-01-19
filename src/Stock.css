@@ -9,12 +9,12 @@
 .text {
   color: black;
   font-size: 13px;
-  /* display: flex;
-  flex-direction: column; */
+  display: flex;
+  flex-flow: column;
+  align-items: flex-start;
 }
 .text > p {
   margin: 0;
-  text-align: left;
 }
 .symbol {
   color: #0081f2;

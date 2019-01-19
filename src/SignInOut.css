@@ -10,12 +10,15 @@
   margin: auto auto 16px;
 }
 
-@media (min-width: 500px) {
+.search-bar:focus ~ .button {
+  display: none !important;
+}
+
+@media (min-width: 650px) {
   .button {
     position: absolute;
-    width: unset;
     top: 55px;
-    right: 30px;
+    right: calc((100% + 30px) - 100vw + 30px);
     margin: unset;
   }
 }
@@ -48,8 +51,4 @@
   margin: auto 0;
   font-family: 'Roboto';
   font-size: 14px;
-}
-
-.signed-in .button__text {
-  padding: 0 16px;
 }

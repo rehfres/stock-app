@@ -101,14 +101,12 @@ class App extends Component {
     return (
       <div className="App">
         {/* <p>{window.devicePixelRatio}</p> */}
-        <header className="App-header">
-          <input className="search-bar" type="text" placeholder="Search" value={this.state.search} onChange={this.search}/>
-          <ul className="search-options">
-            {this.state.searchList.map(symbol => <li key={symbol}><button onMouseDown={() => this.tryToAddSymbolChart(symbol)}>{symbol}</button></li>).slice(0, 28)}
-          </ul>
-        </header>
+        <input className="search-bar" type="text" placeholder="Search" value={this.state.search} onChange={this.search}/>
+        <ul className="search-options">
+          {this.state.searchList.map(symbol => <li key={symbol}><button onMouseDown={() => this.tryToAddSymbolChart(symbol)}>{symbol}</button></li>).slice(0, 28)}
+        </ul>
         <div className="charts-container">
-          <Container onDrop={this.reorderCharts} removeOnDropOut>
+          <Container onDrop={this.reorderCharts} nonDragAreaSelector=".non-draggable" removeOnDropOut>
             {this.state.symbolsListActive.map(symbol => (
               <Draggable key={symbol}>
                 <Stock symbol={symbol} canvasSize={this.state.canvasSize}/>

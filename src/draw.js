@@ -17,13 +17,9 @@ function drawPreviousCloseLine(context, previousClose) {
   context.stroke();
 }
 
-export function drawChart(canvas, context, prices, previousClose) {
+export function drawChart(context, prices, previousClose, lastPriceModifiedForCanvasIfMarketIsOpen) {
 
   drawPreviousCloseLine(context, previousClose);
-  // console.log('%c⧭', 'color: #1663c7', canvasWidth, canvasHeight, secondsInaDay);
-// previousClose = canvasHeight / 2;
-  // console.log('%c⧭', 'color: #a66037', prices);
-  // console.time(1)
   for (const sign of ['positive', 'negative']) {
     let lastData = {
       index: null,
@@ -39,11 +35,22 @@ export function drawChart(canvas, context, prices, previousClose) {
       lastData.index = index;
     }
     context.lineWidth = 1;
-    context.strokeStyle = sign === 'positive'? 'green' : 'red';
+    context.strokeStyle = sign === 'positive' ? 'green' : 'red';
     context.stroke();
     context.lineTo(lastData.time * coefTimeToCanvas, canvasHeight - previousClose);
     fillChart(sign, context, previousClose);
   }
+  const lastPoint = {
+    timeInSeconds: 50,
+    price: 5,
+    sign: 'positive'
+  }
+  context.beginPath();
+  context.arc(lastPoint.timeInSeconds, canvasHeight - lastPoint.price, 1.5, 0, 2 * Math.PI);
+  context.strokeStyle = lastPoint.sign === 'positive' ? 'green' : 'red';
+  context.fillStyle = context.strokeStyle;
+  context.fill();
+  context.stroke();
   // console.timeEnd(1)
 }
 
