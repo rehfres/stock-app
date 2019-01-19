@@ -63,7 +63,7 @@ class App extends Component {
     if (removedIndex === addedIndex) return
     const symbolsListActive = this.state.symbolsListActive.slice();
     const removedChartSymbol = symbolsListActive.splice(removedIndex, 1)[0]
-    if (addedIndex) symbolsListActive.splice(addedIndex, 0, removedChartSymbol);
+    if (addedIndex !== null) symbolsListActive.splice(addedIndex, 0, removedChartSymbol);
     console.log('%c⧭', 'color: #1663c7', symbolsListActive);
     this.setState(state => ({...state, symbolsListActive}));
     if (this.state.signedIn) reorderSymbolsInDb(symbolsListActive);
