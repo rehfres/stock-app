@@ -160,6 +160,7 @@ class Stock extends Component {
       price: message.price,
       timeInSeconds: timeToSeconds(message.time)
     }
+    if (priceNew.timeInSeconds <= lastLocalPriceTime) return;
     const pricesNew = this.state.prices.concat([priceNew])
     if (this._isMounted) this.setState(state => ({...state, prices: pricesNew}));
     // console.log('%c⧭2', 'color: #c7166f', this.state.prices, this.state.pricesModifiedForCanvas);
@@ -218,7 +219,13 @@ class Stock extends Component {
     this._isMounted = false;
   }
   render() {
-    if (!this.state.prices.length) return null;
+    // if (!this.state.prices.length) 
+    if (!this.state.prices.length) return (
+      <div className="chart">
+        <p className="symbol text">{this.props.symbol}</p>
+        <p className="no-data">No data</p>
+      </div>
+    );
     const lastPrice = this.state.prices[this.state.prices.length - 1].price;
     const absoluteChange = Big(lastPrice).minus(this.state.previousClose).toString();
     const percentageChange = Big(lastPrice).times(100).div(this.state.previousClose).minus(100).toString();
