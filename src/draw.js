@@ -40,17 +40,22 @@ export function drawChart(context, prices, previousClose, lastPriceModifiedForCa
     context.lineTo(lastData.time * coefTimeToCanvas, canvasHeight - previousClose);
     fillChart(sign, context, previousClose);
   }
-  const lastPoint = {
-    timeInSeconds: 50,
-    price: 5,
-    sign: 'positive'
+  let lastPoint;
+  // lastPoint = {
+  //   timeInSeconds: 50,
+  //   price: 5,
+  //   sign: 'positive'
+  // }
+  lastPoint = lastPriceModifiedForCanvasIfMarketIsOpen;
+  if (lastPoint) {
+    console.log('%c⧭', 'color: #16a9c7', lastPoint);
+    context.beginPath();
+    context.arc(lastPoint.timeInSeconds, canvasHeight - lastPoint.price, 1.5, 0, 2 * Math.PI);
+    context.strokeStyle = lastPoint.sign === 'positive' ? 'green' : 'red';
+    context.fillStyle = context.strokeStyle;
+    context.fill();
+    context.stroke();
   }
-  context.beginPath();
-  context.arc(lastPoint.timeInSeconds, canvasHeight - lastPoint.price, 1.5, 0, 2 * Math.PI);
-  context.strokeStyle = lastPoint.sign === 'positive' ? 'green' : 'red';
-  context.fillStyle = context.strokeStyle;
-  context.fill();
-  context.stroke();
   // console.timeEnd(1)
 }
 

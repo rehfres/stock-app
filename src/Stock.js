@@ -50,8 +50,8 @@ class Stock extends Component {
   async setPreviousClose(chartDataDay) {
     const chartDataMonth = await fetch('https://api.iextrading.com/1.0/stock/' + this.props.symbol + '/chart/1m')
       .then(response => response.json());
-    const dateToday = new Date(Date.now() - 864e5).toISOString().split('T')[0].replace(/-/g,'');
-    const chardDataDayReturnsYesterday = dateToday === chartDataDay[chartDataDay.length - 1].date;
+    const dateYesterday = this.props.dateYesterday;
+    const chardDataDayReturnsYesterday = dateYesterday === chartDataDay[chartDataDay.length - 1].date;
     const objToGetPreviousCloseFrom = chartDataMonth[chartDataMonth.length - (chardDataDayReturnsYesterday ? 2 : 1)];
     const previousClose = objToGetPreviousCloseFrom.close;
     // console.log('%c⧭', 'color: #c79816', `${this.props.symbol}, pC:${previousClose}`);
@@ -134,12 +134,14 @@ class Stock extends Component {
     socket.on('message', message => {
       message = JSON.parse(message);
       if (message.symbol !== this.props.symbol) return;
-      // console.log(message);
+      console.log(message);
       this.mergeSocketDataToPrices(message);
       this.draw();
     })
   }
   mergeSocketDataToPrices(message) {
+    const messageDateIsToday = new Date(message.time).getDate() === this.props.dateToday;
+    if (!this.state.prices.length || !messageDateIsToday) return;
     console.log('%c⧭', 'color: #16c72e', this._isMounted);
     if (this._isMounted) this.setState(state => ({...state, webSocketsMessagesCounter: state.webSocketsMessagesCounter + 1}));
     const lastLocalPriceTime = this.state.prices[this.state.prices.length - 1].timeInSeconds;
@@ -189,6 +191,7 @@ class Stock extends Component {
       index
     } 
     pricesModifiedForCanvas[sign].push(priceNewModifiedForCanvas);
+    console.log('messageDateIsToday', messageDateIsToday, new Date(message.time).getDate(), this.props.dateToday)
     if (this._isMounted) this.setState(state => ({
       ...state,
       pricesModifiedForCanvas,

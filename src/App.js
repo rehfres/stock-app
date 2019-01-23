@@ -20,7 +20,10 @@ class App extends Component {
         width: 100
       },
       counter: 0,
-      signedIn: null
+      signedIn: null,
+      appHeight: null,
+      dateYesterday: null,
+      dateToday: null
     };
     this.search = this.search.bind(this);
     this.reorderCharts = this.reorderCharts.bind(this);
@@ -86,8 +89,17 @@ class App extends Component {
       });
     }
   }
+  initAppHeight() {
+    if (window.innerWidth < 650) this.setState(state => ({...state, appHeight: window.innerHeight}));
+  }
   componentDidMount() {
+    this.initAppHeight();
     this.initCanvasSizes();
+    this.setState(state => ({
+      ...state,
+      dateYesterday: new Date(Date.now() - 864e5).toISOString().split('T')[0].replace(/-/g,''),
+      dateToday: new Date().getDate()
+    }));
     tryToGetUserId().then(signedIn => {
       console.log('%c⧭s', 'color: #16c7a1', signedIn);
       this.setState(state => ({...state, signedIn}));
@@ -99,7 +111,7 @@ class App extends Component {
   }
   render() {
     return (
-      <div className="App">
+      <div className="App" style={{minHeight: this.state.appHeight}}>
         {/* <p>{window.devicePixelRatio}</p> */}
         <input className="search-bar" type="text" placeholder="Search" value={this.state.search} onChange={this.search}/>
         <ul className="search-options">
@@ -109,7 +121,7 @@ class App extends Component {
           <Container onDrop={this.reorderCharts} nonDragAreaSelector=".non-draggable" removeOnDropOut>
             {this.state.symbolsListActive.map(symbol => (
               <Draggable key={symbol}>
-                <Stock symbol={symbol} canvasSize={this.state.canvasSize}/>
+                <Stock symbol={symbol} dateToday={this.state.dateToday} dateYesterday={this.state.dateYesterday} canvasSize={this.state.canvasSize}/>
               </Draggable>
             ))}
           </Container>
