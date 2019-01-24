@@ -8,6 +8,6 @@
   "runtime~main.js.map": "/stock-app/static/js/runtime~main.5de46911.js.map",
   "static/css/main.d994cb90.chunk.css.map": "/stock-app/static/css/main.d994cb90.chunk.css.map",
   "index.html": "/stock-app/index.html",
-  "precache-manifest.dc523219e92141e3df85f7942b30a5f4.js": "/stock-app/precache-manifest.dc523219e92141e3df85f7942b30a5f4.js",
+  "precache-manifest.d5b97b3ee13333bb62df96f6eb816420.js": "/stock-app/precache-manifest.d5b97b3ee13333bb62df96f6eb816420.js",
   "service-worker.js": "/stock-app/service-worker.js"
 }
