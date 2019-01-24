@@ -142,7 +142,6 @@ class Stock extends Component {
   mergeSocketDataToPrices(message) {
     const messageDateIsToday = new Date(message.time).getDate() === this.props.dateToday;
     if (!this.state.prices.length || !messageDateIsToday) return;
-    console.log('%c⧭', 'color: #16c72e', this._isMounted);
     if (this._isMounted) this.setState(state => ({...state, webSocketsMessagesCounter: state.webSocketsMessagesCounter + 1}));
     const lastLocalPriceTime = this.state.prices[this.state.prices.length - 1].timeInSeconds;
     const lastLocalPrice = this.state.prices[this.state.prices.length - 1].price;
@@ -190,7 +189,7 @@ class Stock extends Component {
       timeInSeconds: this.modifyTimeForCanvas(priceNew.timeInSeconds),
       price: (priceNew.price - this.state.priceMin) * this.state.coefPricesToCanvas,
       index
-    } 
+    }
     pricesModifiedForCanvas[sign].push(priceNewModifiedForCanvas);
     console.log('messageDateIsToday', messageDateIsToday, new Date(message.time).getDate(), this.props.dateToday)
     if (this._isMounted) this.setState(state => ({
