@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 // import logo from './logo.svg';
 import Stock from './Stock';
 import './App.css';
-import { tryToGetUserId, signIn, signOut, getSymbolsFromDb, addSymbolToDb, deleteSymbolFromDb, reorderSymbolsInDb } from './firebase';
+import { tryToGetUserId, signIn, signOut, getSymbolsFromDb, addSymbolToDb, reorderSymbolsInDb } from './firebase';
 import { Container, Draggable } from 'react-smooth-dnd';
 import { initCanvasSize } from './draw'
 import SignInOut from './SignInOut'

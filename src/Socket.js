@@ -1,5 +1,4 @@
 import io from 'socket.io-client';
-import timeToSeconds from './timeToSeconds.js';
 
 export const socket = io('https://ws-api.iextrading.com/1.0/last');
 
