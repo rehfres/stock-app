@@ -1,6 +1,6 @@
 import React from 'react';
 import './SignInOut.css';
-import gLogo from './g-logo.png'; // Tell Webpack this JS file uses this image
+import gLogo from './g-logo.png';
 
 function SignInOut(props) {
   return (

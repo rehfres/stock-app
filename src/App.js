@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 // import logo from './logo.svg';
 import Stock from './Stock';
+import DragTip from './DragTip';
 import './App.css';
 import { tryToGetUserId, signIn, signOut, getSymbolsFromDb, addSymbolToDb, reorderSymbolsInDb } from './firebase';
 import { Container, Draggable } from 'react-smooth-dnd';
@@ -90,7 +91,8 @@ class App extends Component {
     }
   }
   initAppHeight() {
-    if (window.innerWidth < 650) this.setState(state => ({...state, appHeight: window.innerHeight}));
+    const marginTop =  window.innerWidth >= 650 ? 15 : 0; 
+    this.setState(state => ({...state, appHeight: window.innerHeight - marginTop}));
   }
   componentDidMount() {
     this.initAppHeight();
@@ -127,6 +129,7 @@ class App extends Component {
           </Container>
         </div>
         {this.state.signedIn !== null && <SignInOut atClick={this.signInOut} signedIn={this.state.signedIn}/>}
+        <DragTip/>
       </div>
     );
   }

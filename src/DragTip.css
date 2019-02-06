@@ -1,0 +1,34 @@
+.tip {
+  position: absolute;
+  bottom: 100px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  width: 307px;
+  justify-content: center;
+  height: 46px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
+}
+
+
+@media (min-width: 650px) {
+  .tip {
+    bottom: 80px;
+    width: 420px;
+    height: 55px;
+  }
+}
+
+.tip--hidden {
+  display: none;
+}
+
+.tip__text {
+  margin: 0;
+}
+
+.close {
+  margin-left: 20px;
+  cursor: pointer;
+}
