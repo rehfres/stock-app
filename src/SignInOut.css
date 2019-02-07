@@ -63,3 +63,7 @@
   font-family: 'Roboto';
   font-size: 14px;
 }
+
+.signed-in .button__text {
+  padding: 0;
+}
