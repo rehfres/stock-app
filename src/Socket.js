@@ -2,7 +2,7 @@ import io from 'socket.io-client';
 
 export const socket = io('https://ws-api.iextrading.com/1.0/last');
 
-console.log('%c⧭', 'color: #16a9c7', socket);
+// console.log('%c⧭', 'color: #16a9c7', socket);
 // socket.on('message', message => {
 //   message = JSON.parse(message);
 //   const symbol = message.symbol;

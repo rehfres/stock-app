@@ -219,9 +219,9 @@ class Stock extends Component {
   render() {
     // if (!this.state.prices.length) 
     if (!this.state.prices.length) return (
-      <div className="chart">
+      <div className="chart" data-testid="chart">
         <p className="symbol text">{this.props.symbol}</p>
-        <p className="no-data">No data</p>
+        <p className="no-data" data-testid="no-data">No data</p>
       </div>
     );
     const lastPrice = this.state.prices[this.state.prices.length - 1].price;
@@ -229,13 +229,13 @@ class Stock extends Component {
     const percentageChange = Big(lastPrice).times(100).div(this.state.previousClose).minus(100).toString();
     // console.log('%c⧭', 'color: #c71f16', lastPrice.toString(), this.state.previousClose);
     return (
-      <div className="chart">
+      <div className="chart" data-testid="chart">
         <div className="text">
-          <p className="symbol non-draggable">{this.props.symbol}</p>
-          <p className="price non-draggable">{lastPrice}</p>
-          <p className={'change non-draggable ' + (absoluteChange >= 0 ? 'positive' : 'negative')}>{absoluteChange} ({percentageChange}%)</p>
+          <p className="symbol non-draggable" data-testid="symbol">{this.props.symbol}</p>
+          <p className="price non-draggable" data-testid="price">{lastPrice}</p>
+          <p className={'change non-draggable ' + (absoluteChange >= 0 ? 'positive' : 'negative')} data-testid="change">{absoluteChange} ({percentageChange}%)</p>
         </div>
-        <canvas ref={this.canvas} width={this.props.canvasSize.width} height={this.props.canvasSize.height}></canvas>
+        <canvas ref={this.canvas} width={this.props.canvasSize.width} height={this.props.canvasSize.height} data-testid="canvas"></canvas>
       </div>
     );
   }
