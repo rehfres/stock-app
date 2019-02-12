@@ -1,0 +1,58 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`When fetch fails - renders <Stock/> correctly with "no data" element 1`] = `
+<div
+  class="chart"
+  data-testid="chart"
+>
+  <p
+    class="symbol text"
+  >
+    APPL
+  </p>
+  <p
+    class="no-data"
+    data-testid="no-data"
+  >
+    No data
+  </p>
+</div>
+`;
+
+exports[`When fetch is working: renders <Stock/> correctly with symbol, price, change and canvas 1`] = `
+<div
+  class="chart"
+  data-testid="chart"
+>
+  <div
+    class="text"
+  >
+    <p
+      class="symbol non-draggable"
+      data-testid="symbol"
+    >
+      APPL
+    </p>
+    <p
+      class="price non-draggable"
+      data-testid="price"
+    >
+      200
+    </p>
+    <p
+      class="change non-draggable positive"
+      data-testid="change"
+    >
+      150
+       (
+      300
+      %)
+    </p>
+  </div>
+  <canvas
+    data-testid="canvas"
+    height="35"
+    width="100"
+  />
+</div>
+`;
