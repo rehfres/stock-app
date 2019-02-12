@@ -13,14 +13,9 @@ beforeAll(() => {
   getByTestId = temp.getByTestId;
 })
 
-test('renders <Stock/>', async () => {
+test('When fetch fails - renders <Stock/> correctly with "no data" element', async () => {
   const chart = await waitForElement(() => getByTestId('chart'));
-  expect(chart).toBeTruthy();
-});
-
-test('renders no-data when fetch fails', async () => {
-  const noData = await waitForElement(() => getByTestId('no-data'));
-  expect(noData).toBeTruthy();
+  expect(chart).toMatchSnapshot();
 });
 
 describe('When fetch is working:', () => {
@@ -51,35 +46,18 @@ describe('When fetch is working:', () => {
     getByTestId = temp.getByTestId;
   })
   
-  test('renders canvas', async () => {
-    const canvas = await waitForElement(() => getByTestId('canvas'));
-    expect(canvas).toBeTruthy();
-  });
-  
-  test('renders symbol', async () => {
-    const symbol = await waitForElement(() => getByTestId('symbol'));
-    // console.log('%c⧭', 'color: #00a3cc', price.toHaveTextContent);
-    expect(symbol).toBeTruthy();
+  test('renders <Stock/> correctly with symbol, price, change and canvas', async () => {
+    const chart = await waitForElement(() => getByTestId('chart'));
+    expect(chart).toMatchSnapshot();
   });
 
-  test('renders price', async () => {
-    const price = await waitForElement(() => getByTestId('price'));
-    // console.log('%c⧭', 'color: #00a3cc', price.toHaveTextContent);
-    expect(price).toBeTruthy();
-  });
-  
-  test('price is correct', async () => {
+  test('"price" is correct', async () => {
     const price = await waitForElement(() => getByTestId('price'));
     // console.log('%c⧭', 'color: #00a3cc', price.toHaveTextContent);
     expect(price).toHaveTextContent('200');
   });
 
-  test('renders change', async () => {
-    const change = await waitForElement(() => getByTestId('change'));
-    expect(change).toBeTruthy();
-  });
-
-  test('change is correct', async () => {
+  test('"change" is correct', async () => {
     const change = await waitForElement(() => getByTestId('change'));
     expect(change).toHaveTextContent('150 (300%)');
   });
