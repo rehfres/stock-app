@@ -31,7 +31,7 @@ class Stock extends Component {
     this.getPricesMaxMinAndCanvasCoef = this.getPricesMaxMinAndCanvasCoef.bind(this);
   }
   async getDataAndMakeChart() {
-    const chartData = await fetch('https://api.iextrading.com/1.0/stock/' + this.props.symbol + '/chart/1d')
+    const chartData = await fetch('https://cloud.iexapis.com/stable/stock/' + this.props.symbol + '/intraday-prices?token=pk_a9e2a6fe14fe4afe8d45dbe9e23560d7')
       .then(response => response.json());
     return chartData.length ? this.makeChart(chartData) : null;
     // console.log('%c⧭', 'color: #c74b16', chartData);
@@ -48,7 +48,7 @@ class Stock extends Component {
     return this.draw();
   }
   async setPreviousClose(chartDataDay) {
-    const chartDataMonth = await fetch('https://api.iextrading.com/1.0/stock/' + this.props.symbol + '/chart/1m')
+    const chartDataMonth = await fetch('https://cloud.iexapis.com/stable/stock/' + this.props.symbol + '/chart/1m?token=pk_a9e2a6fe14fe4afe8d45dbe9e23560d7')
       .then(response => response.json());
     const dateYesterday = this.props.dateYesterday;
     const chardDataDayReturnsYesterday = dateYesterday === chartDataDay[chartDataDay.length - 1].date;
@@ -192,7 +192,7 @@ class Stock extends Component {
     }
     pricesModifiedForCanvas[sign].push(priceNewModifiedForCanvas);
     console.log('messageDateIsToday', messageDateIsToday, new Date(message.time).getDate(), this.props.dateToday)
-    if (this._isMounted) this.setState(state => ({
+      if (this._isMounted) this.setState(state => ({
       pricesModifiedForCanvas,
       lastPriceModifiedForCanvasIfMarketIsOpen: {
         ...priceNewModifiedForCanvas,
